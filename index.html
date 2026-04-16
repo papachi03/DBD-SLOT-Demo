@@ -1,0 +1,4867 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>DBDパークスロット</title>
+<style>
+html, body{
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+
+body{
+  font-family:sans-serif;
+  text-align:center;
+  background:#000;
+  color:#fff;
+  text-shadow:1px 1px 2px #000;
+}
+
+#app-stage{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#000;
+}
+
+#game-root{
+  width:1600px;
+  height:900px;
+  position:relative;
+  transform-origin:center center;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ===================== */
+/* 共通ボタン */
+/* ===================== */
+
+button{
+  cursor:pointer;
+}
+
+.mode-btn{
+  padding:10px 18px;
+  font-size:16px;
+  border:none;
+  border-radius:999px;
+  background:rgba(255,255,255,0.18);
+  color:#fff;
+  margin:0;
+}
+
+.mini-sound-btn{
+  padding:8px 12px;
+  font-size:13px;
+  border:none;
+  border-radius:999px;
+  background:rgba(0,0,0,0.55);
+  color:#fff;
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  margin:0;
+}
+
+.control-btn{
+  width:100px;
+  height:52px;
+  border:none;
+  border-radius:8px;
+  background:#666;
+  color:#fff;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:700;
+}
+
+.mode-btn:hover,
+.mini-sound-btn:hover{
+  background:rgba(255,255,255,0.24);
+}
+
+/* ===================== */
+/* 画面全体フラッシュ */
+/* ===================== */
+
+.screen-flash{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  background:
+    radial-gradient(circle at center,
+      rgba(255,230,120,0.30) 0%,
+      rgba(255,140,0,0.16) 35%,
+      rgba(255,60,0,0.08) 60%,
+      rgba(0,0,0,0) 100%);
+  transition:opacity 0.12s ease;
+  z-index:9999;
+}
+
+.screen-flash.show{
+  opacity:1;
+}
+
+.screen-flash.rainbow,
+.screen-flash.rainbow-flash{
+  background:
+    radial-gradient(circle at center,
+      rgba(255,255,255,0.22) 0%,
+      rgba(255,80,120,0.18) 18%,
+      rgba(255,180,80,0.16) 34%,
+      rgba(255,240,80,0.14) 48%,
+      rgba(80,255,140,0.14) 62%,
+      rgba(80,190,255,0.14) 76%,
+      rgba(180,80,255,0.14) 88%,
+      rgba(0,0,0,0) 100%);
+  animation:rainbowFlashShift 0.7s linear infinite;
+}
+
+/* ===================== */
+/* 筐体ベース */
+/* ===================== */
+
+.slot-ui{
+  position:relative;
+  width:1600px;
+  height:900px;
+  margin:0 auto;
+  background-image:url("assets/background.png");
+  background-size:1600px 900px;
+  background-position:top left;
+  background-repeat:no-repeat;
+  overflow:hidden;
+}
+
+.slot-base{
+  position:absolute;
+  top:0;
+  left:0;
+  width:1600px;
+  height:900px;
+  display:block;
+  object-fit:fill;
+  user-select:none;
+  pointer-events:none;
+  z-index:5;
+}
+
+/* ===================== */
+/* タイトル部ループ動画 */
+/* ===================== */
+
+.main-loop-wrap{
+  position:absolute;
+  top:38px;
+  left:431px;
+  width:780px;
+  height:195px;
+  z-index:8;
+  pointer-events:auto;
+}
+
+.main-loop-video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  border-radius:6px;
+}
+
+/* hover中は動画を消して下のUIを触れるようにする */
+.main-loop-wrap.hide-video{
+  pointer-events:none;
+}
+
+.main-loop-wrap.hide-video .main-loop-video{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+/* ===================== */
+/* 上部ヘッダー */
+/* ===================== */
+
+.slot-overlay-header{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:5;
+}
+
+.slot-lcd-ui{
+  position:absolute;
+  top:145px;
+  left:50%;
+  transform:translateX(-50%);
+  width:760px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  pointer-events:auto;
+  z-index:6;
+}
+
+.slot-control-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.slot-volume-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-top:-6px;
+}
+
+.slot-lcd-btn{
+  margin:0;
+}
+
+.slot-overlay-creator{
+  position:absolute;
+  top:258px;
+  left:50%;
+  transform:translateX(-50%);
+  width:760px;
+  text-align:center;
+  font-size:18px;
+  color:#fff;
+  opacity:0.95;
+  text-shadow:0 1px 2px #000;
+  pointer-events:auto;
+  z-index:6;
+}
+
+.slot-overlay-creator a{
+  color:#9be3ff;
+  text-decoration:none;
+}
+
+.slot-overlay-creator a:hover{
+  text-decoration:underline;
+}
+
+/* ===================== */
+/* 右上液晶窓ループ動画 */
+/* ===================== */
+
+.survivor-loop-wrap{
+  position:absolute;
+  top:38px;
+  left:1218px;
+  width:160px;
+  height:195px;
+  z-index:8;
+  pointer-events:none;
+  overflow:hidden;
+  border-radius:6px;
+}
+
+.survivor-loop-video{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+}
+
+/* ===================== */
+/* ステータス / 結果 / 履歴 */
+/* ===================== */
+
+.status-badge{
+  position:absolute;
+  top:250px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:6px 14px;
+  border-radius:999px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.2);
+  font-size:14px;
+  color:#fff;
+  z-index:20;
+}
+
+.result-area{
+  position:absolute;
+  top:724px;
+  left:54.6%;
+  transform:translateX(-50%);
+  width:695px;
+  height:74px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  z-index:20;
+}
+
+#resultText{
+  flex:1;
+  height:68px;
+  box-sizing:border-box;
+  padding:0 18px;
+  font-size:20px;
+  font-weight:900;
+  letter-spacing:0.5px;
+  border-radius:10px;
+  border:2px solid rgba(255,255,255,0.4);
+  background:#fff;
+  color:#111;
+  outline:none;
+  line-height:68px;
+  text-align:center;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.10),
+    0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* ===================== */
+/* リール窓 */
+/* ===================== */
+
+.reel-window{
+  position:absolute;
+  width:200px;
+  height:200px;
+  z-index:10;
+}
+
+.reel-pos1{ top:312px; left:338px; }
+.reel-pos2{ top:312px; left:595px; }
+.reel-pos3{ top:312px; left:852px; }
+.reel-pos4{ top:312px; left:1110px; }
+
+.reel{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  border-radius:10px;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  position:relative;
+  z-index:11;
+}
+
+.reel-track{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  will-change:transform;
+}
+
+.reel-item{
+  width:100%;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:#fff;
+  text-align:center;
+}
+
+/* サバイバー・パーク側 */
+.reel-window .reel-item{
+  height:200px;
+  padding:8px;
+  gap:8px;
+}
+
+.reel-window .reel-item img{
+  width:108px;
+  height:108px;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+.reel-window .reel-item-name{
+  font-size:20px;
+  font-weight:bold;
+  line-height:1.15;
+  text-shadow:1px 1px 2px #000;
+}
+
+/* ===================== */
+/* スタートレバー */
+/* ===================== */
+
+.slot-start-lever{
+  border:none;
+  background:transparent;
+  padding:0;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.slot-start-pos{
+  position:absolute;
+  top:560px;
+  left:400px;
+  width:128px;
+  height:128px;
+  z-index:12;
+}
+
+.slot-start-lever img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  filter:drop-shadow(0 8px 8px rgba(0,0,0,0.55));
+  transition:transform .1s ease, filter .1s ease;
+}
+
+.slot-start-lever:hover img{
+  transform:translateY(-2px);
+}
+
+.slot-start-lever:active img{
+  transform:translateY(4px) scale(0.96);
+  filter:brightness(0.88) drop-shadow(0 4px 4px rgba(0,0,0,0.55));
+}
+
+.slot-start-lever:disabled{
+  cursor:not-allowed;
+}
+
+/* ===================== */
+/* 停止ボタン */
+/* ===================== */
+
+.slot-stop-group-overlay{
+  position:absolute;
+  top:585px;
+  left:620px;
+  width:520px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:12;
+}
+
+.stop-socket{
+  width:86px;
+  height:86px;
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:transparent;
+  box-shadow:none;
+}
+
+.reel-stop-btn{
+  width:86px;
+  height:86px;
+  border:none;
+  background:transparent;
+  padding:0;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  z-index:2;
+}
+
+.reel-stop-btn img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  filter:
+    drop-shadow(0 2px 2px rgba(0,0,0,0.45))
+    drop-shadow(0 0 4px rgba(255,60,40,0.10));
+  transition:transform .08s ease, filter .08s ease;
+}
+
+.reel-stop-btn:hover:not(:disabled) img{
+  transform:translateY(-1px) scale(1.03);
+}
+
+.reel-stop-btn:active:not(:disabled) img{
+  transform:translateY(3px) scale(0.95);
+  filter:brightness(0.82) drop-shadow(0 1px 1px rgba(0,0,0,0.45));
+}
+
+.reel-stop-btn:disabled{
+  cursor:not-allowed;
+}
+
+/* 半透明にしない */
+.reel-stop-btn:disabled img{
+  opacity:1;
+  filter:
+    drop-shadow(0 2px 2px rgba(0,0,0,0.45))
+    drop-shadow(0 0 4px rgba(255,60,40,0.10));
+}
+
+/* ===================== */
+/* 停止ボタン発光 */
+/* ===================== */
+
+.stop-socket.active-glow{
+  border-radius:50%;
+  box-shadow:
+    0 0 10px rgba(255, 40, 40, 0.55),
+    0 0 22px rgba(255, 20, 20, 0.45),
+    0 0 36px rgba(255, 0, 0, 0.30);
+  animation:stopSocketGlowPulse 0.8s ease-in-out infinite alternate;
+}
+
+.stop-socket.active-glow::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:50%;
+  border:2px solid rgba(255, 70, 70, 0.65);
+  box-shadow:
+    0 0 10px rgba(255, 70, 70, 0.45),
+    inset 0 0 10px rgba(255, 40, 40, 0.15);
+  pointer-events:none;
+}
+
+/* ===================== */
+/* リール演出 */
+/* ===================== */
+
+.reel.ready-stop{
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.18),
+    0 0 18px rgba(255,255,255,0.10);
+}
+
+.reel.stopping{
+  box-shadow:
+    0 0 12px rgba(255,255,255,0.22),
+    0 0 22px rgba(255,255,255,0.14);
+}
+
+.reel.special-hit{
+  border:2px solid #ffd700;
+  box-shadow:
+    0 0 16px rgba(255,215,0,0.95),
+    0 0 32px rgba(255,140,0,0.70),
+    0 0 48px rgba(255,80,0,0.45);
+}
+
+.reel.rainbow-hit{
+  border:2px solid rgba(255,255,255,0.95);
+  box-shadow:
+    0 0 14px rgba(255,255,255,0.85),
+    0 0 28px rgba(255,0,120,0.45),
+    0 0 42px rgba(0,180,255,0.45),
+    0 0 56px rgba(255,230,0,0.35);
+  animation:
+    rainbowBorderShift 1.2s linear infinite,
+    rainbowPulse 0.7s ease-in-out infinite alternate;
+  overflow:hidden;
+}
+
+.reel.rainbow-hit::before{
+  content:"";
+  position:absolute;
+  inset:-18%;
+  background:conic-gradient(
+    from 0deg,
+    rgba(255, 0, 102, 0.00) 0deg,
+    rgba(255, 0, 102, 0.38) 35deg,
+    rgba(255, 140, 0, 0.38) 75deg,
+    rgba(255, 230, 0, 0.34) 110deg,
+    rgba(0, 255, 140, 0.34) 160deg,
+    rgba(0, 170, 255, 0.38) 215deg,
+    rgba(90, 120, 255, 0.38) 260deg,
+    rgba(200, 80, 255, 0.38) 310deg,
+    rgba(255, 0, 102, 0.38) 360deg
+  );
+  filter:blur(18px) saturate(1.25);
+  opacity:0.95;
+  animation:rainbowSpin 1.6s linear infinite;
+  pointer-events:none;
+  z-index:0;
+}
+
+.reel.rainbow-hit::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.07) 30%,
+      rgba(255,255,255,0.42) 48%,
+      rgba(255,255,255,0.08) 62%,
+      rgba(255,255,255,0) 100%
+    );
+  transform:translateX(-140%);
+  animation:rainbowShine 1.1s ease-in-out infinite;
+  pointer-events:none;
+  z-index:1;
+}
+
+.reel.rainbow-hit .reel-track,
+.reel.rainbow-hit .reel-item{
+  position:relative;
+  z-index:2;
+}
+
+.reel.flash{
+  animation:reelFlash 0.16s ease-out;
+  border-color:rgba(255,255,255,0.95) !important;
+  box-shadow:
+    0 0 18px rgba(255,255,255,1),
+    0 0 34px rgba(255,255,255,0.85),
+    0 0 54px rgba(255,240,180,0.55),
+    0 0 78px rgba(255,255,255,0.35) !important;
+  z-index:3;
+}
+
+.reel.flash-hold{
+  border:2px solid rgba(255,255,255,0.98) !important;
+  box-shadow:
+    0 0 18px rgba(255,255,255,1),
+    0 0 34px rgba(255,255,255,0.88),
+    0 0 56px rgba(255,245,200,0.62),
+    0 0 84px rgba(255,255,255,0.38) !important;
+  animation:flashHoldPulse 0.55s ease-in-out infinite alternate;
+  z-index:3;
+}
+
+.reel.frame-run{
+  border-color:rgba(255,255,255,0.55);
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.12),
+    0 4px 12px rgba(0,0,0,0.35);
+}
+
+.reel.frame-lit{
+  border:2px solid rgba(255,245,180,0.98);
+  box-shadow:
+    0 0 14px rgba(255,255,220,0.95),
+    0 0 28px rgba(255,220,120,0.72),
+    0 0 40px rgba(255,170,50,0.48);
+}
+
+.reel.frame-hit,
+.reel.frame-win-hold{
+  border:2px solid rgba(255,80,80,0.98);
+  box-shadow:
+    0 0 16px rgba(255,80,80,0.95),
+    0 0 32px rgba(255,30,30,0.75),
+    0 0 52px rgba(255,0,0,0.45);
+}
+
+/* イベント進行用カラー: 派手なネオン発光 */
+.reel.frame-event-1 {
+  border: 4px solid rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 
+    0 0 10px #fff,
+    0 0 20px #fff,
+    0 0 40px #fff,
+    0 0 80px #fff !important;
+  z-index: 10;
+}
+.reel.frame-event-2 {
+  border: 4px solid #00f2ff !important;
+  box-shadow: 
+    0 0 10px #00f2ff,
+    0 0 20px #00f2ff,
+    0 0 40px #00f2ff,
+    0 0 80px #00f2ff !important;
+  z-index: 10;
+}
+.reel.frame-event-3 {
+  border: 4px solid #39ff14 !important;
+  box-shadow: 
+    0 0 10px #39ff14,
+    0 0 20px #39ff14,
+    0 0 40px #39ff14,
+    0 0 80px #39ff14 !important;
+  z-index: 10;
+}
+.reel.frame-event-4 {
+  border: 4px solid #ff003c !important;
+  box-shadow: 
+    0 0 15px #ff003c,
+    0 0 30px #ff003c,
+    0 0 60px #ff003c,
+    0 0 120px #ff003c !important;
+  z-index: 10;
+  animation: neonPulseRed 0.6s ease-in-out infinite alternate !important;
+}
+.reel.frame-event-rainbow {
+  border: 4px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 0 20px rgba(255, 255, 255, 0.85),
+    0 0 40px rgba(255, 0, 120, 0.65),
+    0 0 60px rgba(0, 180, 255, 0.65),
+    0 0 80px rgba(255, 230, 0, 0.55) !important;
+  animation: rainbowBorderShift 1.2s linear infinite, rainbowPulse 0.7s ease-in-out infinite alternate !important;
+  z-index: 10;
+}
+
+@keyframes neonPulseRed {
+  from { opacity: 0.9; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.02); }
+}
+
+
+
+/* ===================== */
+/* レバー演出 */
+/* ===================== */
+
+.slot-start-lever.atari-glow img{
+  animation:atariLeverGlow 0.55s ease-in-out infinite alternate;
+  filter:
+    drop-shadow(0 0 8px rgba(255,215,0,0.95))
+    drop-shadow(0 0 18px rgba(255,160,0,0.85))
+    drop-shadow(0 0 34px rgba(255,80,0,0.65));
+}
+
+.slot-start-lever.atari-rainbow img,
+.slot-start-lever.rainbow-glow img{
+  animation:
+    rainbowLeverPulse 0.65s ease-in-out infinite alternate,
+    rainbowLeverHue 1.4s linear infinite;
+  filter:
+    drop-shadow(0 0 10px rgba(255,255,255,0.95))
+    drop-shadow(0 0 18px rgba(255,60,180,0.65))
+    drop-shadow(0 0 28px rgba(0,180,255,0.65))
+    drop-shadow(0 0 40px rgba(255,220,0,0.55));
+}
+
+/* ===================== */
+/* アニメーション */
+/* ===================== */
+
+@keyframes stopSocketGlowPulse{
+  from{
+    transform:scale(1);
+    box-shadow:
+      0 0 8px rgba(255, 40, 40, 0.42),
+      0 0 16px rgba(255, 20, 20, 0.32),
+      0 0 26px rgba(255, 0, 0, 0.20);
+  }
+  to{
+    transform:scale(1.04);
+    box-shadow:
+      0 0 12px rgba(255, 70, 70, 0.72),
+      0 0 26px rgba(255, 30, 30, 0.56),
+      0 0 42px rgba(255, 0, 0, 0.34);
+  }
+}
+
+@keyframes atariLeverGlow{
+  from{
+    transform:scale(1);
+    filter:
+      brightness(1.05)
+      drop-shadow(0 0 8px rgba(255,215,0,0.85))
+      drop-shadow(0 0 18px rgba(255,160,0,0.55));
+  }
+  to{
+    transform:scale(1.06);
+    filter:
+      brightness(1.28)
+      drop-shadow(0 0 14px rgba(255,215,0,1))
+      drop-shadow(0 0 28px rgba(255,140,0,0.95))
+      drop-shadow(0 0 44px rgba(255,60,0,0.75));
+  }
+}
+
+@keyframes rainbowSpin{
+  from{ transform:rotate(0deg) scale(1); }
+  to{ transform:rotate(360deg) scale(1); }
+}
+
+@keyframes rainbowBorderShift{
+  0%{ filter:hue-rotate(0deg) saturate(1.1); }
+  100%{ filter:hue-rotate(360deg) saturate(1.35); }
+}
+
+@keyframes rainbowPulse{
+  from{
+    transform:scale(1);
+    box-shadow:
+      0 0 14px rgba(255,255,255,0.75),
+      0 0 28px rgba(255,0,120,0.35),
+      0 0 42px rgba(0,180,255,0.35),
+      0 0 56px rgba(255,230,0,0.25);
+  }
+  to{
+    transform:scale(1.045);
+    box-shadow:
+      0 0 18px rgba(255,255,255,0.95),
+      0 0 34px rgba(255,0,120,0.55),
+      0 0 52px rgba(0,180,255,0.52),
+      0 0 70px rgba(255,230,0,0.42);
+  }
+}
+
+@keyframes rainbowShine{
+  0%{ transform:translateX(-140%); opacity:0; }
+  20%{ opacity:1; }
+  60%{ opacity:1; }
+  100%{ transform:translateX(140%); opacity:0; }
+}
+
+@keyframes rainbowLeverPulse{
+  from{ transform:scale(1); }
+  to{ transform:scale(1.08); }
+}
+
+@keyframes rainbowLeverHue{
+  0%{ filter:hue-rotate(0deg) brightness(1.08); }
+  100%{ filter:hue-rotate(360deg) brightness(1.28); }
+}
+
+@keyframes rainbowFlashShift{
+  from{ filter:hue-rotate(0deg) saturate(1.1); }
+  to{ filter:hue-rotate(360deg) saturate(1.35); }
+}
+
+@keyframes reelFlash{
+  0%{
+    transform:scale(1);
+    filter:brightness(1);
+  }
+  45%{
+    transform:scale(1.04);
+    filter:brightness(2.4);
+  }
+  100%{
+    transform:scale(1);
+    filter:brightness(1.08);
+  }
+}
+
+@keyframes flashHoldPulse{
+  from{
+    transform:scale(1);
+    filter:brightness(1.08);
+  }
+  to{
+    transform:scale(1.03);
+    filter:brightness(1.32);
+  }
+}
+
+.slot-chance-video{
+  position:absolute;
+  top:20px;
+  left:75px;
+  width:35%;
+  height:35%;
+  object-fit:contain;
+  display:none;
+  pointer-events:none;
+  z-index:0;
+}
+
+.slot-ita{
+  position:absolute;
+  top:22px;
+  left:142px;
+  width:24%;
+  height:24%;
+  object-fit:contain;
+  pointer-events:none;
+  z-index:7;
+  transform-origin:center center;
+}
+
+.slot-ita.shaking{
+  animation:itaShake 0.42s ease-in-out;
+}
+
+@keyframes itaShake{
+  0%   { transform:translate(0, 0) scale(1); }
+  12%  { transform:translate(-8px, 1px) rotate(-2deg) scale(1.02); }
+  24%  { transform:translate(8px, -1px) rotate(2deg) scale(1.02); }
+  36%  { transform:translate(-10px, 1px) rotate(-2.5deg) scale(1.03); }
+  48%  { transform:translate(10px, -1px) rotate(2.5deg) scale(1.03); }
+  60%  { transform:translate(-7px, 0) rotate(-1.8deg) scale(1.02); }
+  72%  { transform:translate(7px, 0) rotate(1.8deg) scale(1.02); }
+  100% { transform:translate(0, 0) rotate(0deg) scale(1); }
+}
+
+.volume-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(0,0,0,0.45);
+  color:#fff;
+  box-shadow:0 4px 10px rgba(0,0,0,0.20);
+  min-width:220px;
+  justify-content:center;
+}
+
+.volume-box label{
+  font-size:13px;
+  min-width:30px;
+  text-align:left;
+}
+
+.volume-box input[type="range"]{
+  width:110px;
+  accent-color:#ff5a5a;
+  cursor:pointer;
+}
+
+.volume-box span{
+  font-size:12px;
+  min-width:36px;
+  text-align:right;
+}
+
+/* ===================== */
+/* 4リール目 疲労系専用フレーム */
+/* ===================== */
+
+.exhaustion-reel-wrap{
+  overflow:visible;
+}
+
+.exhaustion-frame-overlay{
+  position:absolute;
+  inset:-18px;
+  pointer-events:none;
+  z-index:30;
+}
+
+/* 中央フレーム画像 */
+.exhaustion-core{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  opacity:1;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,0.45));
+  z-index:31;
+}
+
+/* 共通手パーツ */
+.exhaustion-arm{
+  position:absolute;
+  object-fit:contain;
+  pointer-events:none;
+  opacity:1;
+  will-change:transform;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,0.45));
+  z-index:32;
+}
+
+/* 左手：少し上にグググっと上がって戻る */
+.exhaustion-arm.left{
+  width:83px;      /* 104px → 約80% */
+  height:120px;    /* 150px → 約80% */
+  left:-18px;      /* 少し内側へ */
+  bottom:-20px;    /* 少し下げる */
+  transform-origin:78% 72%;
+  animation:exhaustionLeftHandLift 2.8s ease-in-out infinite;
+}
+
+/* 右手：左へ軽くガリガリ */
+.exhaustion-arm.right{
+  width:96px;
+  height:80px;
+  top:-8px;
+  right:-18px;
+  transform-origin:18% 68%;
+  animation:exhaustionRightHandScratch 1.2s steps(3, end) infinite;
+}
+
+/* 4リール目は青く光らせない */
+#frame4,
+#frame4.ready-stop,
+#frame4.stopping,
+#frame4.exhaustion-locked{
+  border:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+}
+
+/* 左手：持ち上げて戻す */
+@keyframes exhaustionLeftHandLift{
+  0%{
+    transform:translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+  18%{
+    transform:translate3d(0, -2px, 0) rotate(-0.5deg) scale(1.005);
+  }
+  38%{
+    transform:translate3d(1px, -6px, 0) rotate(-1.2deg) scale(1.01);
+  }
+  52%{
+    transform:translate3d(0, -9px, 0) rotate(-1.8deg) scale(1.015);
+  }
+  68%{
+    transform:translate3d(-1px, -5px, 0) rotate(-1deg) scale(1.008);
+  }
+  100%{
+    transform:translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* 右手：左に軽くガリガリ */
+@keyframes exhaustionRightHandScratch{
+  0%{
+    transform:translate3d(0,0,0) rotate(0deg);
+  }
+  25%{
+    transform:translate3d(-2px,0,0) rotate(-0.5deg);
+  }
+  50%{
+    transform:translate3d(-4px,1px,0) rotate(-1deg);
+  }
+  75%{
+    transform:translate3d(-2px,-1px,0) rotate(0.5deg);
+  }
+  100%{
+    transform:translate3d(0,0,0) rotate(0deg);
+  }
+}
+
+/* アニメーション */
+@keyframes exhaustionGripLeft{
+  0%{
+    transform:translate(-2px, -50%) rotate(-6deg) scale(1);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 8px rgba(110,170,255,0.14));
+  }
+  35%{
+    transform:translate(3px, -50%) rotate(-10deg) scale(1.03);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 12px rgba(140,200,255,0.22));
+  }
+  60%{
+    transform:translate(6px, -50%) rotate(-13deg) scale(1.05);
+    filter:
+      drop-shadow(0 5px 10px rgba(0,0,0,0.6))
+      drop-shadow(0 0 16px rgba(170,220,255,0.28));
+  }
+  100%{
+    transform:translate(-2px, -50%) rotate(-6deg) scale(1);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 8px rgba(110,170,255,0.14));
+  }
+}
+
+@keyframes exhaustionGripRight{
+  0%{
+    transform:translate(2px, -50%) rotate(6deg) scale(1);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 8px rgba(110,170,255,0.14));
+  }
+  35%{
+    transform:translate(-3px, -50%) rotate(10deg) scale(1.03);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 12px rgba(140,200,255,0.22));
+  }
+  60%{
+    transform:translate(-6px, -50%) rotate(13deg) scale(1.05);
+    filter:
+      drop-shadow(0 5px 10px rgba(0,0,0,0.6))
+      drop-shadow(0 0 16px rgba(170,220,255,0.28));
+  }
+  100%{
+    transform:translate(2px, -50%) rotate(6deg) scale(1);
+    filter:
+      drop-shadow(0 4px 8px rgba(0,0,0,0.55))
+      drop-shadow(0 0 8px rgba(110,170,255,0.14));
+  }
+}
+
+@keyframes exhaustionFramePulse{
+  0%, 100%{
+    transform:scale(1);
+    opacity:0.88;
+    filter:
+      drop-shadow(0 0 8px rgba(120,180,255,0.10))
+      drop-shadow(0 0 16px rgba(70,120,255,0.07));
+  }
+  50%{
+    transform:scale(1.015);
+    opacity:1;
+    filter:
+      drop-shadow(0 0 12px rgba(150,210,255,0.18))
+      drop-shadow(0 0 24px rgba(70,130,255,0.12));
+  }
+}
+
+@keyframes exhaustionGripLeftTight{
+  from{
+    transform:translate(4px, -50%) rotate(-11deg) scale(1.04);
+  }
+  to{
+    transform:translate(9px, -50%) rotate(-15deg) scale(1.08);
+  }
+}
+
+@keyframes exhaustionGripRightTight{
+  from{
+    transform:translate(-4px, -50%) rotate(11deg) scale(1.04);
+  }
+  to{
+    transform:translate(-9px, -50%) rotate(15deg) scale(1.08);
+  }
+}
+
+@keyframes exhaustionFramePulseTight{
+  from{
+    transform:scale(1.01);
+    opacity:0.95;
+    filter:
+      drop-shadow(0 0 12px rgba(150,220,255,0.25))
+      drop-shadow(0 0 22px rgba(60,130,255,0.18));
+  }
+  to{
+    transform:scale(1.03);
+    opacity:1;
+    filter:
+      drop-shadow(0 0 18px rgba(180,240,255,0.35))
+      drop-shadow(0 0 34px rgba(70,150,255,0.24));
+  }
+}
+
+.perk-tooltip{
+  position:fixed;
+  min-width:260px;
+  max-width:420px;
+  padding:14px 16px;
+  border-radius:12px;
+  background:rgba(15,15,18,0.96);
+  border:1px solid rgba(255,255,255,0.18);
+  color:#fff;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+  z-index:99999;
+  pointer-events:none;
+  text-align:left;
+  line-height:1.5;
+}
+
+.perk-tooltip.hidden{
+  display:none;
+}
+
+.perk-tooltip-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:8px;
+  color:#ffd66b;
+}
+
+.perk-tooltip-desc{
+  font-size:14px;
+  white-space:normal;
+  word-break:break-word;
+}
+
+/* 固有パーク演出時の緑発光 */
+.unique-hit {
+  border-color: #7dff9f !important;
+
+  box-shadow:
+    0 0 12px rgba(92,255,135,0.9),
+    0 0 24px rgba(92,255,135,0.8),
+    0 0 40px rgba(92,255,135,0.7),
+    0 0 60px rgba(92,255,135,0.6),
+    inset 0 0 14px rgba(92,255,135,0.4);
+
+  animation: uniqueGreenPulse 0.6s ease-in-out infinite;
+}
+
+@keyframes uniqueGreenPulse {
+  0% {
+    filter: brightness(1) saturate(1);
+    box-shadow:
+      0 0 10px rgba(92,255,135,0.7),
+      0 0 20px rgba(92,255,135,0.6),
+      0 0 30px rgba(92,255,135,0.5),
+      0 0 45px rgba(92,255,135,0.4),
+      inset 0 0 10px rgba(92,255,135,0.25);
+  }
+
+  50% {
+    filter: brightness(1.35) saturate(1.4);
+    box-shadow:
+      0 0 18px rgba(92,255,135,1),
+      0 0 36px rgba(92,255,135,0.95),
+      0 0 60px rgba(92,255,135,0.85),
+      0 0 90px rgba(92,255,135,0.75),
+      inset 0 0 20px rgba(92,255,135,0.5);
+  }
+
+  100% {
+    filter: brightness(1) saturate(1);
+    box-shadow:
+      0 0 10px rgba(92,255,135,0.7),
+      0 0 20px rgba(92,255,135,0.6),
+      0 0 30px rgba(92,255,135,0.5),
+      0 0 45px rgba(92,255,135,0.4),
+      inset 0 0 10px rgba(92,255,135,0.25);
+  }
+}
+
+.event-video-wrap{
+  position:absolute;
+  top:38px;
+  left:431px;
+  width:780px;
+  height:195px;
+  z-index:9;
+  pointer-events:none;
+}
+
+.event-video-wrap.hidden{
+  display:none;
+}
+
+.event-video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ===== グリッチハズレ演出 ===== */
+
+.glitch-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0;
+}
+.glitch-overlay.glitch-active {
+  animation: glitch-overlay-anim 0.4s steps(1) forwards;
+  filter: contrast(140%) saturate(120%);
+}
+@keyframes glitch-overlay-anim {
+  0%   { opacity: 1; background: transparent; box-shadow: none; }
+  12%  { background: rgba(255,0,0,0.07);  box-shadow: inset 5px 0 rgba(0,255,255,0.18); }
+  25%  { background: transparent; }
+  38%  { background: rgba(0,0,220,0.06);  box-shadow: inset -5px 0 rgba(255,0,100,0.18); }
+  55%  { background: rgba(255,0,0,0.05);  box-shadow: none; }
+  70%  { background: transparent; }
+  85%  { background: rgba(0,220,0,0.04); }
+  100% { opacity: 0; background: transparent; }
+}
+
+#game-root.glitch-screen {
+  animation: glitch-shift 0.45s steps(2) forwards;
+}
+@keyframes glitch-shift {
+  0%   { transform: translate(0, 0);             filter: none; }
+  10%  { transform: translate(-5px,  2px) skewX(-1deg);  filter: hue-rotate(10deg); }
+  22%  { transform: translate( 5px, -2px) skewX( 1deg);  filter: hue-rotate(-8deg) brightness(1.08); }
+  33%  { transform: translate(-7px,  0  ) skewX(-2deg);  filter: hue-rotate(15deg); }
+  44%  { transform: translate( 6px,  3px) skewX( 1deg);  filter: hue-rotate(-5deg) brightness(0.95); }
+  55%  { transform: translate(-3px, -4px);                filter: hue-rotate(8deg); }
+  66%  { transform: translate( 4px,  2px);                filter: none; }
+  77%  { transform: translate(-2px,  1px);                filter: hue-rotate(5deg); }
+  88%  { transform: translate( 2px, -1px);                filter: none; }
+  100% { transform: translate(0, 0);             filter: none; }
+}
+
+.glitch-error-text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9100;
+  font-family: "Courier New", monospace;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: bold;
+  color: #ff1133;
+  text-shadow:
+    3px  0   0 rgba(0,255,255,0.7),
+    -3px 0   0 rgba(255,0,200,0.7);
+  letter-spacing: 0.25em;
+  pointer-events: none;
+  opacity: 0;
+}
+.glitch-error-text.glitch-error-visible {
+  animation: error-flicker 0.6s steps(1) forwards;
+}
+@keyframes error-flicker {
+  0%   { opacity: 1; }
+  12%  { opacity: 0; }
+  24%  { opacity: 1; }
+  36%  { opacity: 0; }
+  50%  { opacity: 1; text-shadow: 5px 0 0 rgba(0,255,255,0.9), -5px 0 0 rgba(255,0,200,0.9); }
+  62%  { opacity: 0; }
+  75%  { opacity: 1; }
+  88%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* 復活テキスト（SYSTEM RESTORE）: 緑青系で当たり感 */
+.glitch-error-text.glitch-revive-visible {
+  animation: revive-flicker 0.75s steps(1) forwards;
+  color: #00ffcc;
+  text-shadow:
+    3px  0   0 rgba(255, 255, 0, 0.8),
+    -3px 0   0 rgba(0, 200, 255, 0.8);
+}
+@keyframes revive-flicker {
+  0%   { opacity: 1; }
+  15%  { opacity: 0; }
+  30%  { opacity: 1; }
+  45%  { opacity: 0; }
+  60%  { opacity: 1; text-shadow: 5px 0 0 rgba(255,255,0,1), -5px 0 0 rgba(0,200,255,1); }
+  75%  { opacity: 0; }
+  88%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+
+
+</style>
+</head>
+<body>
+<div id="screenFlash" class="screen-flash"></div>
+
+<!-- ===== グリッチハズレ演出 ===== -->
+<div id="glitchOverlay" class="glitch-overlay"></div>
+<div id="glitchErrorText" class="glitch-error-text">SIGNAL LOST</div>
+
+<!-- 店内BGM -->
+<audio id="bgmSound" src="assets/sound/kankyo.mp3" loop></audio>
+
+<!-- スタート音 -->
+<audio id="startSound" src="assets/sound/start.mp3"></audio>
+
+<!-- ストップ音 -->
+<audio id="stopSound" src="assets/sound/stop.mp3"></audio>
+
+<!-- 確定音 -->
+<audio id="kakuteiSound" src="assets/sound/kakutei.mp3"></audio>
+
+<!-- 当たり音 -->
+<audio id="atariSound" src="assets/sound/atari.mp3"></audio>
+<audio id="doreyureSound" src="assets/sound/doreyure.mp3"></audio>
+<audio id="hakaiSound" src="assets/sound/hakai.mp3"></audio>
+
+<div id="app-stage">
+  <div id="game-root">
+
+    <div class="slot-ui">
+  <video
+    id="parkChanceVideo"
+    class="slot-chance-video"
+    muted
+    loop
+    playsinline
+    preload="auto"
+    style="display:none;"
+  >
+    <source src="assets/park_chance.mp4" type="video/mp4">
+  </video>
+
+  <img src="assets/DBD_SLOT_base1.png" class="slot-base" alt="DBD slot base">
+
+  <img src="assets/ITA.png" class="slot-ita" id="slotIta" alt="ITA">
+
+<div id="mainLoopWrap" class="main-loop-wrap" aria-hidden="true">
+  <video
+    id="mainLoopVideo"
+    class="main-loop-video"
+    src="assets/main_loop.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+  ></video>
+</div>
+
+<div id="survivorLoopWrap" class="survivor-loop-wrap" aria-hidden="true">
+  <video
+    id="survivorLoopVideo"
+    class="survivor-loop-video"
+    src="assets/sabaroll.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+  ></video>
+</div>
+
+<!-- ここから追加 -->
+<div id="eventVideoWrap" class="event-video-wrap hidden" aria-hidden="true">
+  <video
+    id="eventVideo"
+    class="event-video"
+    autoplay
+    loop
+    playsinline
+  ></video>
+</div>
+<!-- ここまで追加 -->
+
+ <!-- 上部表示 -->
+<div class="slot-overlay-header">
+  <div class="slot-lcd-ui">
+    <div class="slot-control-row">
+  <button class="mini-sound-btn slot-lcd-btn" onclick="toggleBgm()" id="bgmBtn">🎵 BGM ON</button>
+  <button class="mini-sound-btn slot-lcd-btn" onclick="toggleSe()" id="seBtn">🔔 SE ON</button>
+  <button class="mini-sound-btn slot-lcd-btn" onclick="toggleAutoStop()" id="autoStopBtn">⏱ 自動停止 OFF</button>
+</div>
+
+    <div class="slot-volume-row">
+      <div class="volume-box">
+        <label for="bgmVolume">BGM</label>
+        <input type="range" id="bgmVolume" min="0" max="100" value="20" oninput="setBgmVolume(this.value)">
+        <span id="bgmVolumeText">5%</span>
+      </div>
+
+      <div class="volume-box">
+        <label for="seVolume">SE</label>
+        <input type="range" id="seVolume" min="0" max="100" value="40" oninput="setSeVolume(this.value)">
+        <span id="seVolumeText">12%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slot-overlay-creator">
+    Created by
+    <a href="https://www.twitch.tv/papasan03" target="_blank">papasan03 (Twitch)</a>
+  </div>
+</div> 
+
+  <!-- リール1 -->
+  <div class="reel-window reel-pos1">
+    <div class="reel" id="frame1">
+      <div class="reel-track" id="reel1"></div>
+    </div>
+  </div>
+
+  <!-- リール2 -->
+  <div class="reel-window reel-pos2">
+    <div class="reel" id="frame2">
+      <div class="reel-track" id="reel2"></div>
+    </div>
+  </div>
+
+  <!-- リール3 -->
+  <div class="reel-window reel-pos3">
+    <div class="reel" id="frame3">
+      <div class="reel-track" id="reel3"></div>
+    </div>
+  </div>
+
+  <!-- リール4 -->
+<div class="reel-window reel-pos4 exhaustion-reel-wrap">
+  <div class="reel" id="frame4">
+    <div class="reel-track" id="reel4"></div>
+  </div>
+
+  <!-- 疲労系専用フレーム演出 -->
+  <div class="exhaustion-frame-overlay" id="exhaustionFrameOverlay">
+    <img src="assets/exhaustion_frame_left.png" class="exhaustion-arm left" alt="">
+    <img src="assets/exhaustion_frame_right.png" class="exhaustion-arm right" alt="">
+    <img src="assets/exhaustion_frame_overlay.png" class="exhaustion-core" alt="">
+  </div>
+</div>
+
+  <!-- スタートレバー -->
+  <button class="slot-start-lever slot-start-pos" onclick="startShuffle()" aria-label="スタート">
+    <img src="assets/start-lever.png" alt="start lever">
+  </button>
+
+  <!-- 停止ボタン -->
+  <div class="slot-stop-group-overlay">
+    <div class="stop-socket">
+      <button class="reel-stop-btn" id="stopBtn1" onclick="stopReel(0)" disabled aria-label="リール1停止">
+        <img src="assets/button.png" alt="stop">
+      </button>
+    </div>
+
+    <div class="stop-socket">
+      <button class="reel-stop-btn" id="stopBtn2" onclick="stopReel(1)" disabled aria-label="リール2停止">
+        <img src="assets/button.png" alt="stop">
+      </button>
+    </div>
+
+    <div class="stop-socket">
+      <button class="reel-stop-btn" id="stopBtn3" onclick="stopReel(2)" disabled aria-label="リール3停止">
+        <img src="assets/button.png" alt="stop">
+      </button>
+    </div>
+
+    <div class="stop-socket">
+      <button class="reel-stop-btn" id="stopBtn4" onclick="stopReel(3)" disabled aria-label="リール4停止">
+        <img src="assets/button.png" alt="stop">
+      </button>
+    </div>
+  </div>
+
+<div class="result-area">
+  <input id="resultText" type="text" readonly placeholder="ストップするとここに4つのパーク名が出ます">
+  <button class="control-btn" onclick="copyResult()">コピー</button>
+</div>
+
+
+    </div> <!-- .slot-ui -->
+  </div>   <!-- #game-root -->
+</div>     <!-- #app-stage -->
+
+<script>
+     const bgmSound   = document.getElementById('bgmSound');
+     const startSound = document.getElementById('startSound');
+     const stopSound  = document.getElementById('stopSound');
+     const kakuteiSound = document.getElementById('kakuteiSound');
+     const atariSound   = document.getElementById('atariSound');
+     const uraAtariSound = new Audio("assets/sound/atari1.mp3");
+     const uraHazureSound = new Audio("assets/sound/hazure1.mp3");
+     const doreyureSound = document.getElementById('doreyureSound');
+     const hakaiSound = document.getElementById('hakaiSound');
+
+     const sabaSound = new Audio("assets/sound/saba.mp3");
+     sabaSound.preload = "auto";
+
+const eventSound = new Audio("assets/sound/Event_sound1.mp3");
+eventSound.loop = true;
+eventSound.preload = "auto";
+
+/* グリッチハズレ演出用SE */
+const glitchHeartSound = new Audio("assets/sound/heart_beat.mp3");
+glitchHeartSound.loop    = true;
+glitchHeartSound.preload = "auto";
+
+const glitchNoiseSound = new Audio("assets/sound/horror_noise.mp3");
+glitchNoiseSound.loop    = true;
+glitchNoiseSound.preload = "auto";
+
+const glitchNoiseShotSound = new Audio("assets/sound/noise.mp3");
+glitchNoiseShotSound.loop    = false;
+glitchNoiseShotSound.preload = "auto";
+
+const glitchZetubouSound = new Audio("assets/sound/zetubou.mp3");
+glitchZetubouSound.loop    = false;
+glitchZetubouSound.preload = "auto";
+
+const glitchDonSound = new Audio("assets/sound/Don_SE.mp3");
+glitchDonSound.loop    = false;
+glitchDonSound.preload = "auto";
+
+     const parkChanceVideo = document.getElementById('parkChanceVideo');
+     const slotIta = document.getElementById('slotIta'); 
+     const eventVideoWrap = document.getElementById('eventVideoWrap');
+     const eventVideo = document.getElementById('eventVideo');
+
+const SE_BASE_VOLUME = {
+  start: 0.20,
+  stop: 0.20,
+  kakutei: 0.40,
+  atari: 0.40,
+  uraAtari: 0.20,
+  uraHazure: 0.50,
+  gekiatu: 0.05,
+  doreyure: 0.60,
+  hakai: 0.20,
+  saba: 1,
+  event1: 0.30
+};
+
+/* ===== グリッチ演出（＝パークなし確定演出）定数 ===== */
+const GLITCH_HAZURE_RATE               = 0.08;  // 発動確率（全4停止後・他演出なし時 8%）
+const GLITCH_HAZURE_SILENCE_MS         = 450;   // BGM停止→心音まで無音
+const GLITCH_HAZURE_NOISE_DELAY_MS     = 200;   // 心音→ノイズ重ねるまで
+const GLITCH_HAZURE_GLITCH_DELAY_MS    = 400;   // 心音→グリッチCSS発火まで（累積）
+const GLITCH_HAZURE_GLITCH_DURATION_MS = 400;   // グリッチCSS持続時間
+const GLITCH_HAZURE_ERROR_DELAY_MS     = 500;   // 心音→エラーテキストまで（累積）
+const GLITCH_HAZURE_ERROR_DURATION_MS  = 600;   // エラーテキスト表示時間
+const GLITCH_HAZURE_REEL_START_MS      = 1100;  // 心音→リール書き換え開始まで（累積）
+const GLITCH_HAZURE_REEL_INTERVAL_MS   = 250;   // リール間の書き換え間隔
+const GLITCH_HAZURE_HOLD_MS            = 2000;  // 全リール確定後の溜め時間（絶望ルート）
+
+const SE_BASE_VOLUME_GLITCH = {
+  heartbeat: 0.35,  // 心音（×seVolume）
+  noise:     0.22,  // 低音ノイズ（×seVolume）
+  don:       0.65,  // Don_SE 復活演出（×seVolume）
+};
+
+/* ===== グリッチ復活ルート 定数 ===== */
+const GLITCH_REVIVE_RATE         = 0.20;  // 復活確率（20%）
+const GLITCH_REVIVE_PAUSE_MS     = 1200;  // パークなし揃い→ドンSEまでの溜め
+const GLITCH_REVIVE_DON_DELAY_MS = 900;   // ドンSE後→再スピン開始まで
+
+/* ===================== */
+/* イベント演出状態管理 */
+/* ===================== */
+let eventState = 0;   // 0=なし 1=Event1 2=Event2 ...
+let eventActive = false;
+let eventStep = 0;    // 停止ボタンの進行段階
+let eventExclusiveMode = false;          // イベント専用モード中
+let holdEventStateUntilNextStart = false; // 次回スタートまでイベント状態維持
+let skipPostStopBonusThisRound = false;
+let keepEventResultVideoUntilNextStart = false;
+
+/* ===== グリッチハズレ演出 状態 ===== */
+let isGlitchHazureActive = false;
+
+const allParks = [
+  // 1〜3リール（通常パーク）
+  { name: "与えられた猶予",  description: "あなたが生存者をフックから救助したとき：・救助された生存者はフック解除後の我慢が延長する。・救助された生存者はフック解除後の迅速が延長する。",  icon: "Perks/L4D/iconPerks_BorrowedTime.png" },
+  { name: "決死の一撃",      description: "フックから外されたとき、次の一定秒数内に殺人鬼に担ぎ上げられた際、特殊なスキルチェックに成功すると殺人鬼が4秒間怯む。",                        icon: "Perks/DLC2/iconPerks_DecisiveStrike.png" },
+  { name: "血族",            description: "フックに吊るされている間、生存者と殺人鬼のオーラが一定範囲内で全員に視えるようになる。",                                                   icon: "Perks/iconPerks_Kindred.png" },
+  { name: "解放",            description: "他の生存者を安全にフックから救助すると、自力でフックから脱出できるようになる。",                                                             icon: "Perks/Haiti/iconPerks_Deliverance.png" },
+  { name: "素早く静かに",    description: "乗り越えや隠れるアクションで発生する音の探知範囲が100%減少する。",                                                                           icon: "Perks/iconPerks_QuickAndQuiet.png" },
+  { name: "内なる回復",      description: "トーテムを浄化したあと、ロッカーに隠れると即座に無傷になる。",                                                                               icon: "Perks/Qatar/iconPerks_innerStrength.png" },
+  { name: "鋼の意志",        description: "痛みによるうめき声が25〜75%減少する。",                                                                                                     icon: "Perks/iconPerks_IronWill.png" },
+  { name: "セルフケア",      description: "回復アイテムを使わずに自己治療ができるようになる。",                                                                                         icon: "Perks/iconPerks_SelfCare.png" },
+  { name: "陽動",            description: "殺人鬼の脅威範囲内で45秒間動かずにいると、任意の場所に小石を投げ殺人鬼に通知を送ることができる。",                                           icon: "Perks/Haiti/iconPerks_Diversion.png" },
+  { name: "真っ向勝負",      description: "ロッカーに3秒間隠れると発動可能。ロッカーから飛び出す際、前方にいる殺人鬼を3秒間怯ませる。発動後、40秒間の疲労を発生させる。",              icon: "Perks/Mali/iconPerks_HeadOn.png" },
+  { name: "ずっと一緒だ",    description: "瀕死状態の生存者を治療する速度が100%上昇する。治療完了後、その生存者が我慢を得る。",                                                         icon: "Perks/DLC5/iconPerks_WereGonnaLiveForever.png" },
+  { name: "都会の逃走術",    description: "しゃがみ状態の間、迅速を得る。",                                                                                                             icon: "Perks/iconPerks_UrbanEvasion.png" },
+  // 4リール（疲労パーク）
+  { name: "デッド・ハード",  description: "負傷状態で走っているときにアビリティ発動ボタンを押すと、0.5秒我慢を得る。発動後、40秒間疲労状態になる。",                                   icon: "Perks/DLC5/iconPerks_DeadHard.png" },
+  { name: "全力疾走",        description: "走り始めたとき、通常の150%の速度で最大3秒間全力で走る。発動後、60〜40秒間の疲労を発生させる。",                                             icon: "Perks/iconPerks_SprintBurst.png" },
+  { name: "スマートな着地",  description: "高所から落ちた後のよろめく時間が75%減少する。さらに、通常の150%の速さで最大3秒間走ることができる。発動後、疲労を発生させる。",             icon: "Perks/iconPerks_BalancedLanding.png" },
+  // 特殊枠（パークなしは3コピー：1〜3リール用在庫3枚で1スピン管理）
+  // 4リールは getReelParkList で find により別途1つ追加されるため、ここには含めない
+  { name: "パークなし",      description: "ホッホッホ､はずれじゃよ。",                                                                                                                 icon: "Perks/iconAction_carriedBody.png" },
+  { name: "パークなし",      description: "ホッホッホ､はずれじゃよ。",                                                                                                                 icon: "Perks/iconAction_carriedBody.png" },
+  { name: "パークなし",      description: "ホッホッホ､はずれじゃよ。",                                                                                                                 icon: "Perks/iconAction_carriedBody.png" },
+  { name: "パーク自由",      description: "大当たり！好きなパークを１つ選択。",                                                                                                         icon: "Perks/iconStatusEffects_exhausted.png" },
+];
+
+
+const PUBLIC_MATCH_FIXED_REEL_INDEX = 3; // 0始まりなので4番目
+
+// パークなし在庫管理（1〜3リール用）
+// 1スピン中に在庫が減り、次スピン開始時に3にリセットする
+// ※パークなし確定演出（全停止後の別処理）とは独立した管理
+const NO_PERK_POOL_SIZE = 3;
+let noPerkRemainingCount = NO_PERK_POOL_SIZE;
+
+// Demo版 パークなし救済候補（重み付き）
+// CLAUDE.md の救済パークルールに基づく4種のみ
+const REVIVAL_CANDIDATES = [
+  { name: "セルフケア",    weight: 30 },
+  { name: "鋼の意志",     weight: 25 },
+  { name: "内なる回復",   weight: 25 },
+  { name: "素早く静かに", weight: 20 },
+];
+
+const EXHAUSTION_PERK_NAMES = [
+  "全力疾走",
+  "スマートな着地",
+  "デッド・ハード",
+];
+
+function isExhaustionPerk(park) {
+  return !!park && EXHAUSTION_PERK_NAMES.includes(String(park.name || "").trim());
+}
+
+function getFixedExhaustionParks() {
+  return allParks.filter(park => isExhaustionPerk(park));
+}
+
+function getParkByName(name) {
+  return allParks.find(p => p.name === name) || null;
+}
+
+function getNoPerkObject() {
+  return allParks.find(p => p.name === "パークなし") || null;
+}
+
+function getReels123Parks() {
+  return allParks.filter(park => {
+    if (!park) return false;
+
+    const name = String(park.name || "").trim();
+
+    // 疲労系は1〜3番から完全除外
+    if (isExhaustionPerk(park)) return false;
+
+    // 自由確定は通常抽選には入れない
+    if (name === "自由確定") return false;
+
+    return true;
+  });
+}
+
+
+function getAllNormalPerks() {
+  return getReels123Parks().filter(park => {
+    const name = String(park.name || "").trim();
+    if (name === "パークなし") return false;
+    if (name === "パーク自由") return false;
+    return true;
+  });
+}
+
+function getAllExhaustionPerks() {
+  return allParks.filter(park => isExhaustionPerk(park));
+}
+
+
+const URA_ENTRY_RATE = 0.12; // ハズレ発展（裏抽選突入）12%
+const URA_HIT_RATE   = 0.35; // 裏抽選救済成功 35%
+
+// =====================
+// 追加イベント抽選
+// =====================
+
+// イベント全体発生率 8%
+const FRAME_EVENT_TRIGGER_RATE = 0.08;  // ステップアップ演出発動 8%
+
+// 演出1 / 演出2 の選択率
+const FRAME_EVENT1_RATE = 0.35; // 残りは演出2 = 0.30（内部比率は変更なし）
+
+// 演出ごとの当たり率
+const FRAME_EVENT1_HIT_RATE = 0.12; // ステップアップ成功 12%
+const FRAME_EVENT2_HIT_RATE = 0.12; // フラッシング演出成功 12%
+
+// 次回スタート時の自由確定演出率
+const NEXT_FREE_RATE_EVENT1 = 0.10;
+const NEXT_FREE_RATE_EVENT2 = 0.30;
+
+// 次回スタート用ブースト
+let pendingNextSpecialRate = null;   // null / 1/3 / 1/20
+let pendingNextSpecialSource = null; // "event1" / "event2" / null
+
+// 追加イベント処理中
+let isFrameEventProcessing = false;
+let frameEventSessionId = 0;
+
+let isUraProcessing = false;
+let uraSessionId = 0;
+let uraResolved = false;
+let uraTargetIndexes = [];
+let uraSpinPendingCount = 0;
+let keepDoorChanceVideoUntilNextStart = false;
+
+
+const FREE_PARK = {
+  name: "自由確定",
+  description: "好きなパークを自由に選べる当たり枠",
+  icon: "Perks/iconStatusEffects_luck.png"
+};
+
+function getNoPerkPark() {
+  return allParks.find(p => p.name === "パークなし") || {
+    name: "パークなし",
+    description: "ホッホッホ､はずれじゃよ。",
+    icon: "Perks/iconAction_carriedBody.png"
+  };
+}
+
+function getForcedSpecialParkForReel(index) {
+  return FREE_PARK;
+}
+const SPECIAL_PERK_NAMES = ["パークなし", "パーク自由","自由パーク", "自由確定"];
+
+const SPECIAL_HIT_RATE = 0.015; // ペカりモード 1.5%
+
+// 合計100%になるように補正
+const FREE_REEL_DISTRIBUTION = [
+  { count: 4, rate: 0.02 },
+  { count: 3, rate: 0.13 },
+  { count: 2, rate: 0.28 },
+  { count: 1, rate: 0.57 }
+];
+
+// ドア演出
+const DOOR_EVENT_TRIGGER_RATE = 0.025; // ドア揺れ 2.5%
+const DOOR_EVENT_HIT_RATE     = 0.18;  // ドア揺れ後の成功 18%（変更なし）
+const DOOR_EVENT_WAIT_MS = 600;
+
+let isDoorChanceProcessing = false;
+
+
+let currentSpecialHit = false;
+let currentFreeReelIndexes = [];
+
+function triggerSpecialFlash(isRainbow = false) {
+  const flash = document.getElementById("screenFlash");
+  if (!flash) return;
+
+  flash.classList.toggle("rainbow-flash", !!isRainbow);
+
+  flash.classList.add("show");
+  setTimeout(() => flash.classList.remove("show"), 180);
+  setTimeout(() => flash.classList.add("show"), 260);
+  setTimeout(() => flash.classList.remove("show"), 420);
+
+  setTimeout(() => {
+    flash.classList.remove("rainbow-flash");
+  }, 500);
+}
+
+const ITEM_HEIGHT = 200;
+const VIEW_HEIGHT = 200;
+const CENTER_OFFSET = 0;
+const REEL_IDS = ["reel1", "reel2", "reel3", "reel4"];
+const FRAME_IDS = ["frame1", "frame2", "frame3", "frame4"];
+const STOP_BTN_IDS = ["stopBtn1", "stopBtn2", "stopBtn3", "stopBtn4"];
+const REEL_COPY_COUNT = 5;
+const REEL_MIDDLE_COPY = 2;
+
+// キーボード操作（ローカル）
+const REEL_COMMAND_COOLDOWN_MS = 300; // 同一リールへの連打防止
+let reelCommandAccepted      = [false, false, false, false]; // 1スピン中の二重受付防止
+let reelCommandCooldownUntil = [0, 0, 0, 0];                // 各リールのクールダウン終了時刻
+
+let animationFrameId = null;
+let lastFrameTime = 0;
+let stoppedReelCount = 0;
+let bgmEnabled = true;
+let seEnabled = true;
+let autoStopEnabled = false;
+let isShuffling = false;
+let isStopping = false;
+let bgmVolume = 0.05;
+let seVolume = 0.12;
+
+let autoStopTimers = [];
+let autoStopSessionId = 0;
+
+
+const reelResults = [];
+const lockedPerkKeys = [];
+const reelStates = {
+  reel1: {
+    y: 0,
+    speed: 0,
+    phase: "idle", // idle / spinning / stopping / stopped
+    finalPark: null,
+    stopTargetY: null,
+    stopFromY: 0,
+    stopStartMs: null,
+    stopEndMs: null,
+    stopRequested: false
+  },
+  reel2: {
+    y: 0,
+    speed: 0,
+    phase: "idle",
+    finalPark: null,
+    stopTargetY: null,
+    stopFromY: 0,
+    stopStartMs: null,
+    stopEndMs: null,
+    stopRequested: false
+  },
+  reel3: {
+    y: 0,
+    speed: 0,
+    phase: "idle",
+    finalPark: null,
+    stopTargetY: null,
+    stopFromY: 0,
+    stopStartMs: null,
+    stopEndMs: null,
+    stopRequested: false
+  },
+  reel4: {
+    y: 0,
+    speed: 0,
+    phase: "idle",
+    finalPark: null,
+    stopTargetY: null,
+    stopFromY: 0,
+    stopStartMs: null,
+    stopEndMs: null,
+    stopRequested: false
+  }
+};
+
+function setStopButtonGlow(index, enabled) {
+  const sockets = document.querySelectorAll(".stop-socket");
+  const socket = sockets[index];
+  if (!socket) return;
+  socket.classList.toggle("active-glow", enabled);
+}
+
+function setAllStopButtonGlow(enabled) {
+  const sockets = document.querySelectorAll(".stop-socket");
+  sockets.forEach(socket => {
+    socket.classList.toggle("active-glow", enabled);
+  });
+}
+
+function playUraAtari() {
+  if (!seEnabled || !uraAtariSound) return;
+  uraAtariSound.pause();
+  uraAtariSound.currentTime = 0;
+  uraAtariSound.volume = SE_BASE_VOLUME.uraAtari * seVolume;
+  uraAtariSound.play().catch(() => {});
+}
+
+function playUraHazure() {
+  if (!seEnabled || !uraHazureSound) return;
+  uraHazureSound.pause();
+  uraHazureSound.currentTime = 0;
+  uraHazureSound.volume = SE_BASE_VOLUME.uraHazure * seVolume;
+  uraHazureSound.play().catch(() => {});
+}
+
+function playGekiatuSound() {
+  if (!seEnabled || !gekiatuSound) return;
+  gekiatuSound.pause();
+  gekiatuSound.currentTime = 0;
+  gekiatuSound.volume = SE_BASE_VOLUME.gekiatu * seVolume;
+  gekiatuSound.play().catch(() => {});
+}
+
+function playDoreyureSe() {
+  if (!seEnabled || !doreyureSound) return;
+  doreyureSound.pause();
+  doreyureSound.currentTime = 0;
+  doreyureSound.volume = SE_BASE_VOLUME.doreyure * seVolume;
+  doreyureSound.play().catch(() => {});
+}
+
+function playHakaiSe() {
+  if (!seEnabled || !hakaiSound) return;
+  hakaiSound.pause();
+  hakaiSound.currentTime = 0;
+  hakaiSound.volume = SE_BASE_VOLUME.hakai * seVolume;
+  hakaiSound.play().catch(() => {});
+}
+
+const gekiatuSound = new Audio("assets/sound/gekiatu.mp3");
+
+function startDoorChanceLoopVideo() {
+  if (!parkChanceVideo) return;
+
+  parkChanceVideo.loop = true;
+  parkChanceVideo.style.display = "block";
+  parkChanceVideo.currentTime = 0;
+  parkChanceVideo.play().catch(() => {});
+}
+
+function resetDoorChanceVisuals() {
+  keepDoorChanceVideoUntilNextStart = false;
+  isDoorChanceProcessing = false;
+
+  if (parkChanceVideo) {
+    parkChanceVideo.pause();
+    parkChanceVideo.currentTime = 0;
+    parkChanceVideo.style.display = "none";
+  }
+
+  if (slotIta) {
+    slotIta.classList.remove("shaking");
+    slotIta.style.display = "block";
+  }
+}
+
+async function runDoorChanceIfNeeded() {
+  if (skipPostStopBonusThisRound) {
+    finalizeResultDisplay(false);
+    return;
+  }
+
+  if (isDoorChanceProcessing) {
+    finalizeResultDisplay();
+    return;
+  }
+
+  isDoorChanceProcessing = true;
+
+  try {
+    const shouldTrigger = Math.random() < DOOR_EVENT_TRIGGER_RATE;
+
+    if (!shouldTrigger) {
+      finalizeResultDisplay();
+      return;
+    }
+
+    setStatus("???");
+    playDoreyureSe();
+
+    for (let i = 0; i < 3; i++) {
+      if (slotIta) {
+        slotIta.classList.remove("shaking");
+        void slotIta.offsetWidth;
+        slotIta.classList.add("shaking");
+      }
+      await sleep(500);
+    }
+
+    const isHit = Math.random() < DOOR_EVENT_HIT_RATE;
+
+    if (!isHit) {
+      if (slotIta) {
+        slotIta.classList.remove("shaking");
+      }
+      finalizeResultDisplay();
+      return;
+    }
+
+    if (slotIta) {
+      slotIta.classList.remove("shaking");
+      slotIta.style.display = "none";
+    }
+
+    playHakaiSe();
+    playGekiatuSound();
+    triggerSpecialFlash(true);
+    startDoorChanceLoopVideo();
+
+    keepDoorChanceVideoUntilNextStart = true;
+    setStatus("PARK CHANCE!!");
+
+    await sleep(DOOR_EVENT_WAIT_MS);
+    await runDoorFreedomSequence();
+
+  } catch (e) {
+    console.error("runDoorChanceIfNeeded error:", e);
+    finalizeResultDisplay(false);
+
+  } finally {
+    isDoorChanceProcessing = false;
+
+    if (!skipPostStopBonusThisRound) {
+      const startLever = document.querySelector(".slot-start-lever");
+      if (startLever && !isShuffling && !isUraProcessing && !isFrameEventProcessing) {
+        startLever.disabled = false;
+      }
+    }
+  }
+}
+
+function showPerkTooltip(park, mouseX, mouseY) {
+  const tooltip = document.getElementById("perkTooltip");
+  const title = document.getElementById("perkTooltipTitle");
+  const desc = document.getElementById("perkTooltipDesc");
+
+  if (!tooltip || !title || !desc || !park) return;
+
+  title.textContent = park.name || "";
+  desc.textContent = park.description || "説明なし";
+
+  tooltip.classList.remove("hidden");
+
+  const offset = 18;
+  const tooltipRect = tooltip.getBoundingClientRect();
+
+  let left = mouseX + offset;
+  let top = mouseY + offset;
+
+  if (left + tooltipRect.width > window.innerWidth - 12) {
+    left = mouseX - tooltipRect.width - offset;
+  }
+
+  if (top + tooltipRect.height > window.innerHeight - 12) {
+    top = window.innerHeight - tooltipRect.height - 12;
+  }
+
+  if (left < 12) left = 12;
+  if (top < 12) top = 12;
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+function hidePerkTooltip() {
+  const tooltip = document.getElementById("perkTooltip");
+  if (!tooltip) return;
+  tooltip.classList.add("hidden");
+}
+
+function attachPerkTooltipEvents(element, park) {
+  if (!element || !park) return;
+
+  element.onmouseenter = (e) => {
+    showPerkTooltip(park, e.clientX, e.clientY);
+  };
+
+  element.onmousemove = (e) => {
+    showPerkTooltip(park, e.clientX, e.clientY);
+  };
+
+  element.onmouseleave = () => {
+    hidePerkTooltip();
+  };
+}
+
+function clearPerkTooltipEvents() {
+  for (let i = 0; i < REEL_IDS.length; i++) {
+    const frame = document.getElementById(FRAME_IDS[i]);
+    if (!frame) continue;
+
+    frame.onmouseenter = null;
+    frame.onmousemove = null;
+    frame.onmouseleave = null;
+  }
+
+  hidePerkTooltip();
+}
+
+function makeFallbackIcon(label) {
+  const safeLabel = String(label || "NO ICON").replace(/[<>&"]/g, "");
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+      <rect width="96" height="96" rx="12" fill="#2b2b2b"/>
+      <rect x="4" y="4" width="88" height="88" rx="10" fill="none" stroke="#888" stroke-width="2"/>
+      <text x="48" y="42" text-anchor="middle" font-size="12" fill="#ddd" font-family="sans-serif">NO IMAGE</text>
+      <text x="48" y="62" text-anchor="middle" font-size="10" fill="#9be3ff" font-family="sans-serif">
+        ${safeLabel.slice(0, 10)}
+      </text>
+    </svg>
+  `;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function buildReel(reelId) {
+  const reel = document.getElementById(reelId);
+  if (!reel) return;
+
+  reel.innerHTML = "";
+
+  const reelIndex = REEL_IDS.indexOf(reelId);
+  const reelParks = getReelParkList(reelIndex);
+  const extended = [];
+
+  for (let i = 0; i < REEL_COPY_COUNT; i++) {
+    extended.push(...reelParks);
+  }
+
+  extended.forEach(park => {
+    const item = document.createElement("div");
+    item.className = "reel-item";
+
+    const img = document.createElement("img");
+    img.src = park.icon;
+    img.alt = park.name;
+    img.onerror = function () {
+      this.onerror = null;
+      this.src = makeFallbackIcon(park.name);
+    };
+
+    const name = document.createElement("div");
+    name.className = "reel-item-name";
+    name.textContent = park.name;
+
+    item.appendChild(img);
+    item.appendChild(name);
+    reel.appendChild(item);
+  });
+
+  const state = reelStates[reelId];
+  const reelLength = reelParks.length;
+  const listHeight = reelLength * ITEM_HEIGHT;
+
+  if (typeof state.y !== "number" || !isFinite(state.y)) {
+    state.y = -(reelLength * ITEM_HEIGHT * REEL_MIDDLE_COPY);
+  }
+
+  const minY = -(listHeight * (REEL_COPY_COUNT - 1));
+  const maxY = -listHeight;
+
+  while (state.y >= maxY) state.y -= listHeight;
+  while (state.y < minY) state.y += listHeight;
+
+  reel.style.transition = "none";
+  reel.style.transform = `translateY(${state.y}px)`;
+}
+
+function getReelParkList(reelIdOrIndex) {
+  const reelIndex =
+    typeof reelIdOrIndex === "number"
+      ? reelIdOrIndex
+      : REEL_IDS.indexOf(reelIdOrIndex);
+
+  // 4番目リールは疲労系専用
+  if (reelIndex === PUBLIC_MATCH_FIXED_REEL_INDEX) {
+    const exhaustion = getFixedExhaustionParks();
+    const noPerk = allParks.find(p => p.name === "パークなし");
+
+    return noPerk ? [...exhaustion, noPerk] : exhaustion;
+  }
+
+  // 1〜3番目リールは疲労系を完全除外
+  const reels123 = getReels123Parks();
+
+  const enabledNormal = reels123.filter(park => {
+    const name = String(park.name || "").trim();
+    return name !== "パークなし" && name !== "パーク自由" && name !== "自由確定";
+  });
+
+  const noPerks = reels123.filter(park => park.name === "パークなし");
+  const freeParks = reels123.filter(park => park.name === "パーク自由");
+
+  // 全解除時でも パークなし / パーク自由 は残す
+  // ※在庫管理は noPerkRemainingCount / isNoPerkDepleted で行い、ここでは全件返す
+  return [...enabledNormal, ...noPerks, ...freeParks];
+}
+
+
+function resetReelStates() {
+  clearAutoStopTimers();
+  uraSpinPendingCount = 0;
+
+  REEL_IDS.forEach((reelId, index) => {
+    const state = reelStates[reelId];
+
+    if (state._uraAnimId) {
+      cancelAnimationFrame(state._uraAnimId);
+      state._uraAnimId = null;
+    }
+
+    // y は維持する。未定義の初回だけ中央へ
+    if (typeof state.y !== "number" || !isFinite(state.y)) {
+      const reelLength = getReelParkList(reelId).length;
+      state.y = -(reelLength * ITEM_HEIGHT * REEL_MIDDLE_COPY);
+    }
+
+    state.speed = 1800 + index * 120;
+    state.phase = "idle";
+    state.finalPark = null;
+    state.stopTargetY = null;
+    state.stopFromY = state.y;
+    state.stopStartMs = null;
+    state.stopEndMs = null;
+    state.stopRequested = false;
+    state._lastTempSpinTime = 0;
+
+    const frame = document.getElementById(FRAME_IDS[index]);
+    const reel = document.getElementById(reelId);
+    const stopBtn = document.getElementById(STOP_BTN_IDS[index]);
+
+    frame?.classList.remove(
+      "stopping",
+      "special-hit",
+      "ready-stop",
+      "rainbow-hit",
+      "flash-hold",
+      "flash",
+      "exhaustion-locked"
+    );
+
+    if (reel) reel.style.transition = "none";
+    if (stopBtn) stopBtn.disabled = true;
+
+    applyReelTransform(reelId);
+  });
+
+  reelResults.length = 0;
+  lockedPerkKeys.length = 0;
+  stoppedReelCount = 0;
+  lastFrameTime = 0;
+
+  currentSpecialHit = false;
+  currentFreeReelIndexes = [];
+
+  setStartLeverGlow(false);
+
+  isUraProcessing = false;
+  uraResolved = false;
+  uraTargetIndexes = [];
+  uraSessionId++;
+
+  clearFrameEventClasses();
+  isFrameEventProcessing = false;
+  frameEventSessionId++;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = false;
+
+  setAllStopButtonGlow(false);
+}
+
+function applyReelTransform(reelId) {
+  const reel = document.getElementById(reelId);
+  if (!reel) return;
+  reel.style.transform = `translateY(${reelStates[reelId].y}px)`;
+}
+
+function getParkIndex(park) {
+  return allParks.findIndex(p => p.name === park.name && p.icon === park.icon);
+}
+
+function wrapReelY(reelId) {
+  const state = reelStates[reelId];
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+
+  const minY = -(listHeight * (REEL_COPY_COUNT - 1));
+  const maxY = -listHeight;
+
+  while (state.y >= maxY) {
+    state.y -= listHeight;
+  }
+  while (state.y < minY) {
+    state.y += listHeight;
+  }
+}
+
+function normalizeReelTop(y, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+  return ((-y % listHeight) + listHeight) % listHeight;
+}
+
+function getDisplayedParkFromY(y, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+  const normalizedTop = ((-y % listHeight) + listHeight) % listHeight;
+
+  const centeredIndex = Math.round((normalizedTop + CENTER_OFFSET) / ITEM_HEIGHT) % reelParks.length;
+  return reelParks[centeredIndex];
+}
+
+function computeStopYForFixedDuration(currentY, parkIndex, reelId, minSteps = 1) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+
+  const normalizedTop = ((-currentY % listHeight) + listHeight) % listHeight;
+  const targetTop = parkIndex * ITEM_HEIGHT - CENTER_OFFSET;
+
+  let delta = targetTop - normalizedTop;
+
+  while (delta <= 0) delta += listHeight;
+  while (delta < minSteps * ITEM_HEIGHT) delta += listHeight;
+
+  let targetY = currentY - delta;
+
+  const minY = -(listHeight * (REEL_COPY_COUNT - 1));
+  const maxY = -listHeight;
+
+  while (targetY >= maxY) targetY -= listHeight;
+  while (targetY < minY) targetY += listHeight;
+
+  return targetY;
+}
+
+function getMostVisibleIndexFromCurrentY(y, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+  const normalizedTop = ((-y % listHeight) + listHeight) % listHeight;
+
+  let bestIndex = 0;
+  let bestVisible = -1;
+
+  for (let i = 0; i < reelParks.length; i++) {
+    const itemTop = i * ITEM_HEIGHT;
+    const itemBottom = itemTop + ITEM_HEIGHT;
+
+    let visible = 0;
+
+    const viewTop = normalizedTop;
+    const viewBottom = normalizedTop + VIEW_HEIGHT;
+
+    if (viewBottom <= listHeight) {
+      const overlapTop = Math.max(viewTop, itemTop);
+      const overlapBottom = Math.min(viewBottom, itemBottom);
+      visible = Math.max(0, overlapBottom - overlapTop);
+    } else {
+      const firstViewTop = viewTop;
+      const firstViewBottom = listHeight;
+      const secondViewTop = 0;
+      const secondViewBottom = viewBottom - listHeight;
+
+      const overlap1Top = Math.max(firstViewTop, itemTop);
+      const overlap1Bottom = Math.min(firstViewBottom, itemBottom);
+      const part1 = Math.max(0, overlap1Bottom - overlap1Top);
+
+      const overlap2Top = Math.max(secondViewTop, itemTop);
+      const overlap2Bottom = Math.min(secondViewBottom, itemBottom);
+      const part2 = Math.max(0, overlap2Bottom - overlap2Top);
+
+      visible = part1 + part2;
+    }
+
+    if (visible > bestVisible) {
+      bestVisible = visible;
+      bestIndex = i;
+    }
+  }
+
+  return bestIndex;
+}
+
+function finishReelStop(reelId) {
+  const index = REEL_IDS.indexOf(reelId);
+  const state = reelStates[reelId];
+  const frame = document.getElementById(FRAME_IDS[index]);
+
+  state.phase = "stopped";
+  frame?.classList.remove("stopping", "ready-stop", "special-hit", "rainbow-hit");
+
+  if (isRainbowPerk(state.finalPark)) {
+    frame?.classList.add("rainbow-hit");
+  } else if (isSpecialPerk(state.finalPark)) {
+    frame?.classList.add("special-hit");
+  } else {
+    frame?.classList.add("ready-stop");
+  }
+
+  reelResults[index] = state.finalPark;
+
+  if (state.finalPark && !isSpecialPerk(state.finalPark) && !isRainbowPerk(state.finalPark)) {
+    const key = state.finalPark.name;
+    if (!lockedPerkKeys.includes(key)) {
+      lockedPerkKeys.push(key);
+    }
+  }
+
+  stoppedReelCount++;
+
+  const allStopped = REEL_IDS.every(id => reelStates[id].phase === "stopped");
+
+  if (allStopped) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+
+    // Event4 まで到達しているなら、全停止後に最終抽選へ発展
+    if (eventActive && eventStep === 3) {
+      resolveEventFinalResult();
+      return;
+    }
+
+    // グリッチ演出（全4停止後のみ抽選）
+    // ※通常のパークなし在庫制（noPerkRemainingCount）とは完全に別処理。
+    //   在庫制はリール停止時の個別カウント。グリッチは全停止後の一括演出。
+    // 発動条件: 他演出なし + 当たりなし + 後処理演出未開始
+    if (
+      !eventActive &&
+      !currentSpecialHit &&
+      !skipPostStopBonusThisRound &&
+      !isUraProcessing &&
+      !isDoorChanceProcessing &&
+      !isFrameEventProcessing &&
+      Math.random() < GLITCH_HAZURE_RATE
+    ) {
+      isGlitchHazureActive = true;
+      startGlitchHazureSequence();
+      return;
+    }
+
+    runUraLotteryIfNeeded();
+  }
+}
+
+function forceReelDisplay(index, park, locked = true) {
+  const reelId = REEL_IDS[index];
+  const frameId = FRAME_IDS[index];
+  const reel = document.getElementById(reelId);
+  const frame = document.getElementById(frameId);
+
+  if (!reel || !frame || !park) return;
+
+  reel.innerHTML = `
+    <div class="reel-item">
+      <img src="${park.icon}" alt="${park.name}" onerror="this.onerror=null;this.src='${makeFallbackIcon(park.name)}'">
+      <div class="reel-item-name">${park.name}</div>
+    </div>
+  `;
+
+  reel.style.transform = "translateY(0px)";
+
+  frame.classList.remove(
+    "stopping",
+    "ready-stop",
+    "special-hit",
+    "rainbow-hit",
+    "flash",
+    "flash-hold",
+    "frame-run",
+    "frame-lit",
+    "frame-hit",
+    "frame-flash-all",
+    "frame-win-hold"
+    
+  );
+
+  if (!locked) return;
+
+  if (isRainbowPerk(park)) {
+    frame.classList.add("rainbow-hit");
+  } else if (isSpecialPerk(park)) {
+    frame.classList.add("special-hit");
+  } else {
+    frame.classList.add("ready-stop");
+  }
+
+  attachPerkTooltipEvents(frame, park);
+}
+
+function isSpecialPerk(park) {
+  if (!park) return false;
+  const name = String(park.name || "").trim();
+  return SPECIAL_PERK_NAMES.includes(name);
+}
+
+function isRainbowPerk(park) {
+  if (!park) return false;
+  return String(park.name || "").trim() === "自由確定";
+}
+
+function isLockedPark(park) {
+  if (!park) return false;
+  if (isSpecialPerk(park)) return false;
+  return lockedPerkKeys.includes(park.name);
+}
+
+// 1〜3リールのパークなし在庫が尽きた場合にtrue（4リールは独立）
+function isNoPerkDepleted(park, reelIndex) {
+  if (!park || park.name !== "パークなし") return false;
+  if (reelIndex === PUBLIC_MATCH_FIXED_REEL_INDEX) return false;
+  return noPerkRemainingCount <= 0;
+}
+
+function getAllowedStopIndexFromCurrentY(y, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const startIndex = getMostVisibleIndexFromCurrentY(y, reelId);
+
+  // 4番目リールは疲労系固定枠なので、そのまま止める
+  if (REEL_IDS.indexOf(reelId) === PUBLIC_MATCH_FIXED_REEL_INDEX) {
+    return startIndex;
+  }
+
+  const reelIndex = REEL_IDS.indexOf(reelId);
+  for (let step = 0; step < reelParks.length; step++) {
+    const idx = (startIndex + step) % reelParks.length;
+    const park = reelParks[idx];
+
+    if (!isLockedPark(park) && !isNoPerkDepleted(park, reelIndex)) {
+      return idx;
+    }
+  }
+
+  return startIndex;
+}
+
+/**
+ * 現在位置から「前に進む方向」へ最短でスナップする
+ * 余計に1周させない
+ */
+function getSnapTargetY(currentY, parkIndex, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+  const normalizedTop = normalizeReelTop(currentY, reelId);
+  const targetTop = parkIndex * ITEM_HEIGHT - CENTER_OFFSET;
+
+  let deltaTop = targetTop - normalizedTop;
+
+  while (deltaTop <= -listHeight / 2) deltaTop += listHeight;
+  while (deltaTop > listHeight / 2) deltaTop -= listHeight;
+
+  return currentY - deltaTop;
+}
+
+function recenterReelForUra(reelId) {
+  const state = reelStates[reelId];
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+
+  const normalizedTop = normalizeReelTop(state.y, reelId);
+  state.y = -(listHeight * 1) - normalizedTop;
+
+  applyReelTransform(reelId);
+}
+
+function getUraStopTargetY(targetIndex, reelId) {
+  const reelParks = getReelParkList(reelId);
+  const listHeight = reelParks.length * ITEM_HEIGHT;
+  const targetTop = targetIndex * ITEM_HEIGHT - CENTER_OFFSET;
+
+  return -(listHeight * 3) - targetTop;
+}
+
+function stopReel(index) {
+  if (!isShuffling) return;
+  if (isStopping) return;
+  if (eventExclusiveMode) return;
+
+  const btn = document.getElementById(`stopBtn${index + 1}`);
+  if (!btn || btn.disabled) return;
+
+  // ここから既存処理
+
+  if (!isShuffling || isUraProcessing) return;
+  if (isFreeReel(index)) return;
+
+  const reelId = REEL_IDS[index];
+  const state = reelStates[reelId];
+  const frame = document.getElementById(FRAME_IDS[index]);
+  const stopBtn = document.getElementById(STOP_BTN_IDS[index]);
+
+  if (!state || state.phase !== "spinning") return;
+
+  state.stopRequested = true;
+  state.phase = "stopping";
+  state.stopFromY = state.y;
+
+  const reelParks = getReelParkList(reelId);
+  const stopIndex = getAllowedStopIndexFromCurrentY(state.y, reelId);
+  const stopPark = reelParks[stopIndex];
+  state.finalPark = stopPark;
+
+  // 1〜3リールでパークなしが確定したら在庫を1消費
+  if (stopPark && stopPark.name === "パークなし" && index !== PUBLIC_MATCH_FIXED_REEL_INDEX) {
+    noPerkRemainingCount = Math.max(0, noPerkRemainingCount - 1);
+  }
+
+  state.stopTargetY = getSnapTargetY(state.y, stopIndex, reelId);
+
+  const distance = Math.abs(state.stopTargetY - state.y);
+  const duration = Math.max(80, Math.min(180, distance * 0.35));
+
+  state.stopStartMs = performance.now();
+  state.stopEndMs = state.stopStartMs + duration;
+
+  frame?.classList.add("stopping");
+  if (stopBtn) stopBtn.disabled = true;
+
+  setStopButtonGlow(index, false);
+
+  // Event1→Event4 までは停止ボタン押下時に進める
+  if (eventActive && eventStep < 3) {
+    handleEventProgress();
+  }
+
+  playStopSe();
+}
+
+function clearEventFrameGlow() {
+  FRAME_IDS.forEach(id => {
+    const frame = document.getElementById(id);
+    if (!frame) return;
+
+    frame.classList.remove(
+      "frame-run",
+      "frame-lit",
+      "frame-hit",
+      "frame-flash-all",
+      "frame-win-hold",
+      "frame-event-1",
+      "frame-event-2",
+      "frame-event-3",
+      "frame-event-4",
+      "frame-event-rainbow"
+    );
+  });
+}
+
+function setEventFrameGlow(stage) {
+  clearEventFrameGlow();
+
+  // 1:白, 2:青, 3:緑, 4:赤
+  if (stage >= 1 && stage <= 4) {
+    const className = `frame-event-${stage}`;
+    FRAME_IDS.forEach(id => {
+      const frame = document.getElementById(id);
+      if (frame) frame.classList.add(className);
+    });
+    return;
+  }
+
+  // stage 5 は虹
+  if (stage === 5) {
+    FRAME_IDS.forEach(id => {
+      const frame = document.getElementById(id);
+      if (frame) frame.classList.add("frame-event-rainbow");
+    });
+  }
+}
+
+// 停止ごとのイベント進行テーブル (rate: 継続率, video: 動画, glow: 枠色ステージ)
+const EVENT_PROGRESS_STEPS = [
+  { rate: 0.7, video: "assets/Event2.mp4", glow: 2 }, // 1停止目: 青
+  { rate: 0.5, video: "assets/Event3.mp4", glow: 3 }, // 2停止目: 緑
+  { rate: 0.3, video: "assets/Event4.mp4", glow: 4 }, // 3停止目: 赤
+];
+
+function handleEventProgress() {
+  if (!eventActive) return;
+
+  eventStep++;
+
+  const step = EVENT_PROGRESS_STEPS[eventStep - 1];
+  if (!step) return;
+
+  if (Math.random() < step.rate) {
+    playEventVideo(step.video);
+    setEventFrameGlow(step.glow);
+  } else {
+    clearEventFrameGlow();
+    endEvent(false);
+  }
+}
+
+function resolveEventFinalResult() {
+  // 通常の後続抽選を全部止める / handleEventProgress をこれ以上進ませない
+  skipPostStopBonusThisRound = true;
+  eventActive = false;
+
+  // 枠色は赤のまま維持してドキドキさせる（glow変更・クリアは行わない）
+  const isWin = Math.random() < 0.03;
+  playEventVideo(isWin ? "assets/Event5.mp4" : "assets/Event6.mp4");
+
+  // 5秒後に結果へ（動画は次スタートまで残す）
+  setTimeout(() => {
+    isWin ? runEventFreedomSequence() : finishEventLoseKeepingVideo();
+  }, 5000);
+}
+
+async function runEventFreedomSequence() {
+  clearAutoStopTimers();
+
+  isShuffling = true;
+  isStopping = false;
+  isDoorChanceProcessing = false;
+  isFrameEventProcessing = false;
+
+  currentSpecialHit = true;
+  currentFreeReelIndexes = [0, 1, 2, 3];
+
+  reelResults.length = 0;
+  lockedPerkKeys.length = 0;
+  stoppedReelCount = 0;
+  lastFrameTime = 0;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  // イベント音と動画を止める
+  // Event5動画は次回スタートまで残す
+  keepEventResultVideoUntilNextStart = true;
+
+  // 音だけ止める
+  eventSound.pause();
+  eventSound.currentTime = 0;
+
+  REEL_IDS.forEach((reelId, index) => {
+    const state = reelStates[reelId];
+    const frame = document.getElementById(FRAME_IDS[index]);
+    const stopBtn = document.getElementById(STOP_BTN_IDS[index]);
+
+    if (!state) return;
+
+    buildReel(reelId);
+
+    state.phase = "spinning";
+    state.speed = 1550 + index * 90;
+    state.finalPark = null;
+    state.stopRequested = false;
+    state.stopTargetY = null;
+    state.stopFromY = state.y;
+    state.stopStartMs = null;
+    state.stopEndMs = null;
+
+    frame?.classList.remove(
+      "special-hit",
+      "rainbow-hit",
+      "ready-stop",
+      "stopping",
+      "flash-hold",
+      "flash",
+      "frame-run",
+      "frame-lit",
+      "frame-hit",
+      "frame-flash-all",
+      "frame-win-hold"
+    );
+
+    if (stopBtn) stopBtn.disabled = true;
+  });
+
+  setAllStopButtonGlow(false);
+  setStartLeverGlow(true, true);
+  triggerSpecialFlash(true);
+
+  cancelAnimationFrame(animationFrameId);
+  animationFrameId = requestAnimationFrame(reelLoop);
+
+  for (let i = 0; i < REEL_IDS.length; i++) {
+    await sleep(180);
+
+    stopFreeReelInstant(i);
+
+    const frame = document.getElementById(FRAME_IDS[i]);
+    const forcedPark = getForcedSpecialParkForReel(i);
+
+    frame?.classList.remove("special-hit", "ready-stop", "stopping", "rainbow-hit");
+
+    if (isRainbowPerk(forcedPark)) {
+      frame?.classList.add("rainbow-hit");
+    } else if (isSpecialPerk(forcedPark)) {
+      frame?.classList.add("special-hit");
+    } else {
+      frame?.classList.add("ready-stop");
+    }
+
+    playStopSe();
+  }
+
+  await sleep(220);
+
+  playKakuteiSe();
+  triggerSpecialFlash(true);
+  finalizeResultDisplay(false);
+
+  isShuffling = false;
+  isStopping = false;
+  setStartLeverGlow(false);
+  clearEventFrameGlow();
+  setStatus("イベント当たり！ 全リール自由確定");
+}
+
+function finishEventLoseKeepingVideo() {
+  eventActive = false;
+  eventState = 0;
+  eventStep = 0;
+
+  // Event6.mp4 を次のスタートまで残す
+  keepEventResultVideoUntilNextStart = true;
+
+  clearEventFrameGlow();
+
+  eventSound.pause();
+  eventSound.currentTime = 0;
+
+  if (bgmEnabled) {
+    bgmSound.currentTime = 0;
+    bgmSound.play().catch(() => {});
+  }
+
+  isShuffling = false;
+  isStopping = false;
+  isUraProcessing = false;
+  isDoorChanceProcessing = false;
+  isFrameEventProcessing = false;
+
+  cancelAnimationFrame(animationFrameId);
+  animationFrameId = null;
+
+  STOP_BTN_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = true;
+  });
+
+  setAllStopButtonGlow(false);
+  setStartLeverGlow(false);
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = false;
+
+  // ハズレ時も結果表示・コピー・パークtooltipを有効にする
+  finalizeResultDisplay(false);
+
+  setStatus("イベント終了");
+}
+
+function endEvent(isWin) {
+  eventActive = false;
+  eventState = 0;
+  eventStep = 0;
+
+  hideEventVideo();
+
+  eventSound.pause();
+  eventSound.currentTime = 0;
+
+  if (bgmEnabled) {
+    bgmSound.currentTime = 0;
+    bgmSound.play().catch(() => {});
+  }
+}
+
+function playKakuteiSe() {
+  if (!seEnabled || !kakuteiSound) return;
+  kakuteiSound.pause();
+  kakuteiSound.currentTime = 0;
+  kakuteiSound.volume = SE_BASE_VOLUME.kakutei * seVolume;
+  kakuteiSound.play().catch(() => {});
+}
+
+function playAtariSe() {
+  if (!seEnabled || !atariSound) return;
+  atariSound.pause();
+  atariSound.currentTime = 0;
+  atariSound.volume = SE_BASE_VOLUME.atari * seVolume;
+  atariSound.play().catch(() => {});
+}
+
+function isFreeReel(index) {
+  return currentSpecialHit && currentFreeReelIndexes.includes(index);
+}
+
+function pickSpecialHit() {
+  return Math.random() < SPECIAL_HIT_RATE;
+}
+
+function pickFreeReelCount() {
+  const r = Math.random();
+  let acc = 0;
+
+  for (const item of FREE_REEL_DISTRIBUTION) {
+    acc += item.rate;
+    if (r < acc) return item.count;
+  }
+
+  return 1;
+}
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function pickFreeReelIndexes() {
+  const freeCount = pickFreeReelCount();
+  const indexes = shuffleArray([0, 1, 2, 3]).slice(0, freeCount);
+  return indexes.sort((a, b) => a - b);
+}
+
+function setStartLeverGlow(enabled, isRainbow = false) {
+  const lever = document.querySelector(".slot-start-lever");
+  if (!lever) return;
+
+  lever.classList.remove("atari-glow", "rainbow-glow");
+
+  if (enabled) {
+    lever.classList.add(isRainbow ? "rainbow-glow" : "atari-glow");
+  }
+}
+
+function stopFreeReelInstant(index) {
+  const reelId = REEL_IDS[index];
+  const state = reelStates[reelId];
+  const frame = document.getElementById(FRAME_IDS[index]);
+  const stopBtn = document.getElementById(STOP_BTN_IDS[index]);
+
+  if (!state) return;
+
+  const forcedPark = getForcedSpecialParkForReel(index);
+  const reelParks = getReelParkList(reelId);
+
+  let targetIndex = reelParks.findIndex(
+    p => p.name === forcedPark.name && p.icon === forcedPark.icon
+  );
+
+  state.phase = "stopped";
+  state.stopRequested = true;
+  state.finalPark = forcedPark;
+
+  // そのリール配列内に自由確定が無い場合でも、強制表示で確実に出す
+  if (targetIndex < 0) {
+    reelResults[index] = forcedPark;
+    forceReelDisplay(index, forcedPark, true);
+
+    if (stopBtn) stopBtn.disabled = true;
+    setStopButtonGlow(index, false);
+    return;
+  }
+
+  state.stopTargetY = getSnapTargetY(state.y, targetIndex, reelId);
+  state.y = state.stopTargetY;
+
+  applyReelTransform(reelId);
+
+  frame?.classList.remove("ready-stop", "stopping", "special-hit", "rainbow-hit");
+
+  if (isRainbowPerk(forcedPark)) {
+    frame?.classList.add("rainbow-hit");
+  } else if (isSpecialPerk(forcedPark)) {
+    frame?.classList.add("special-hit");
+  } else {
+    frame?.classList.add("ready-stop");
+  }
+
+  if (stopBtn) stopBtn.disabled = true;
+  setStopButtonGlow(index, false);
+
+  reelResults[index] = forcedPark;
+  attachPerkTooltipEvents(frame, forcedPark);
+}
+
+function reelLoop(timestamp) {
+  if (!isShuffling) return;
+
+  if (!lastFrameTime) lastFrameTime = timestamp;
+  const dt = Math.min((timestamp - lastFrameTime) / 1000, 0.05);
+  lastFrameTime = timestamp;
+
+  REEL_IDS.forEach(reelId => {
+    const state = reelStates[reelId];
+    if (!state) return;
+
+    if (state.phase === "spinning") {
+      state.y += state.speed * dt;
+      wrapReelY(reelId);
+      applyReelTransform(reelId);
+      return;
+    }
+
+    if (state.phase === "stopping") {
+      const total = state.stopEndMs - state.stopStartMs;
+      const elapsed = Math.min(timestamp - state.stopStartMs, total);
+      const t = Math.max(0, Math.min(elapsed / total, 1));
+
+      // 少しだけスロットっぽく減速
+      const eased = 1 - Math.pow(1 - t, 2.2);
+
+      state.y = state.stopFromY + (state.stopTargetY - state.stopFromY) * eased;
+      applyReelTransform(reelId);
+
+      if (t >= 1) {
+        state.y = state.stopTargetY;
+        applyReelTransform(reelId);
+        finishReelStop(reelId);
+      }
+    }
+  });
+
+  if (isShuffling) {
+    animationFrameId = requestAnimationFrame(reelLoop);
+  }
+}
+
+function startShuffle() {
+  // 前回演出の残りフラグを掃除
+  if (!isShuffling) {
+    isUraProcessing = false;
+    isDoorChanceProcessing = false;
+    isFrameEventProcessing = false;
+    isStopping = false;
+    resetGlitchHazure(); // グリッチハズレ状態を必ずリセット
+  }
+
+  if (isShuffling) return;
+
+  // 追加: 1スピンごとの受付状態リセット
+  reelCommandAccepted = [false, false, false, false];
+  reelCommandCooldownUntil = [0, 0, 0, 0];
+
+  skipPostStopBonusThisRound = false;
+
+  eventActive = false;
+  eventStep = 0;
+  eventState = 0;
+
+  clearPerkTooltipEvents();
+
+  if (keepDoorChanceVideoUntilNextStart) {
+    resetDoorChanceVisuals();
+  }
+
+  if (keepEventResultVideoUntilNextStart) {
+    hideEventVideo();
+    keepEventResultVideoUntilNextStart = false;
+  }
+
+  if (holdEventStateUntilNextStart) {
+    eventActive = false;
+    eventExclusiveMode = false;
+    holdEventStateUntilNextStart = false;
+
+    eventState = 0;
+    eventStep = 0;
+
+    hideEventVideo();
+    eventSound.pause();
+    eventSound.currentTime = 0;
+  }
+
+  noPerkRemainingCount = NO_PERK_POOL_SIZE; // パークなし在庫リセット（buildReel より前に必ず実行）
+  resetReelStates();
+  REEL_IDS.forEach(reelId => buildReel(reelId));
+
+  FRAME_IDS.forEach(id => {
+    const frame = document.getElementById(id);
+    frame?.classList.remove(
+      "special-hit",
+      "rainbow-hit",
+      "ready-stop",
+      "stopping",
+      "flash-hold",
+      "flash",
+      "frame-run",
+      "frame-lit",
+      "frame-hit",
+      "frame-flash-all",
+      "frame-win-hold"
+    );
+  });
+
+  isShuffling = true;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  currentSpecialHit = pickCurrentStartSpecialHit();
+  currentFreeReelIndexes = currentSpecialHit ? pickFreeReelIndexes() : [];
+
+  tryEventStart();
+
+  setStatus(
+    currentSpecialHit
+      ? `当たり演出発動！ 自由パーク ${currentFreeReelIndexes.length} 枠`
+      : "各ストップボタンで停止してください"
+  );
+
+  playStartSe();
+
+  setAllStopButtonGlow(true);
+
+  if (currentSpecialHit) {
+    const hasRainbow = currentFreeReelIndexes.length > 0;
+    setStartLeverGlow(true, hasRainbow);
+
+    playAtariSe();
+
+    triggerSpecialFlash(hasRainbow);
+  }
+
+  REEL_IDS.forEach((reelId, i) => {
+    const state = reelStates[reelId];
+    const stopBtn = document.getElementById(STOP_BTN_IDS[i]);
+    const frame = document.getElementById(FRAME_IDS[i]);
+
+    if (isFreeReel(i)) {
+      state.phase = "spinning";
+      state.speed = 1700 + Math.random() * 200;
+
+      setTimeout(() => {
+        stopFreeReelInstant(i);
+      }, 600 + Math.random() * 300);
+
+      return;
+    }
+
+    state.phase = "spinning";
+    state.speed = 1700 + (i * 120) + Math.random() * 120;
+
+    if (stopBtn) stopBtn.disabled = false;
+    frame?.classList.add("ready-stop");
+  });
+
+  const resultInput = document.getElementById("resultText");
+  if (resultInput) resultInput.value = "";
+
+  if (currentSpecialHit && currentFreeReelIndexes.length === 4) {
+    REEL_IDS.forEach((_, i) => {
+      const stopBtn = document.getElementById(STOP_BTN_IDS[i]);
+      if (stopBtn) stopBtn.disabled = true;
+    });
+
+    setAllStopButtonGlow(false);
+
+    for (let i = 0; i < REEL_IDS.length; i++) {
+      stopFreeReelInstant(i);
+
+      const frame = document.getElementById(FRAME_IDS[i]);
+      const forcedPark = getForcedSpecialParkForReel(i);
+
+      frame?.classList.remove("special-hit", "rainbow-hit", "ready-stop", "stopping");
+
+      if (isRainbowPerk(forcedPark)) {
+        frame?.classList.add("rainbow-hit");
+      } else if (isSpecialPerk(forcedPark)) {
+        frame?.classList.add("special-hit");
+      } else {
+        frame?.classList.add("ready-stop");
+      }
+    }
+
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+
+    playStopSe();
+    playKakuteiSe();
+
+    triggerSpecialFlash(true);
+    showResult();
+
+    for (let i = 0; i < REEL_IDS.length; i++) {
+      const frame = document.getElementById(FRAME_IDS[i]);
+      const park = reelResults[i];
+      if (frame && park) attachPerkTooltipEvents(frame, park);
+    }
+
+    isShuffling = false;
+
+    setStatus("当たり！ 1〜3リール自由確定 / 4リールはパークなし");
+
+    setStartLeverGlow(false);
+
+    if (startLever) startLever.disabled = false;
+    return;
+  }
+
+  animationFrameId = requestAnimationFrame(reelLoop);
+
+  if (autoStopEnabled) {
+    scheduleAutoStopSequence();
+  }
+}
+
+async function runDoorFreedomSequence() {
+  if (isUraProcessing) return;
+
+  clearAutoStopTimers();
+
+  isShuffling = true;
+  isStopping = false;
+  isDoorChanceProcessing = false;
+
+  currentSpecialHit = true;
+  currentFreeReelIndexes = [0, 1, 2, 3];
+
+  reelResults.length = 0;
+  lockedPerkKeys.length = 0;
+  stoppedReelCount = 0;
+  lastFrameTime = 0;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  REEL_IDS.forEach((reelId, index) => {
+    const state = reelStates[reelId];
+    const frame = document.getElementById(FRAME_IDS[index]);
+    const stopBtn = document.getElementById(STOP_BTN_IDS[index]);
+
+    if (!state) return;
+
+    buildReel(reelId);
+
+    state.phase = "spinning";
+    state.speed = 1550 + index * 90;
+    state.finalPark = null;
+    state.stopRequested = false;
+    state.stopTargetY = null;
+    state.stopFromY = state.y;
+    state.stopStartMs = null;
+    state.stopEndMs = null;
+
+    frame?.classList.remove(
+      "special-hit",
+      "rainbow-hit",
+      "ready-stop",
+      "stopping",
+      "flash-hold",
+      "flash",
+      "frame-run",
+      "frame-lit",
+      "frame-hit",
+      "frame-flash-all",
+      "frame-win-hold"
+    );
+
+    if (stopBtn) stopBtn.disabled = true;
+  });
+
+  setAllStopButtonGlow(false);
+  setStartLeverGlow(true, true);
+  setStatus("PARK CHANCE!! 1〜3リール自由確定 / 4リールはパークなし");
+
+  cancelAnimationFrame(animationFrameId);
+  animationFrameId = requestAnimationFrame(reelLoop);
+
+for (let i = 0; i < REEL_IDS.length; i++) {
+  await sleep(180);
+
+  stopFreeReelInstant(i);
+
+  const frame = document.getElementById(FRAME_IDS[i]);
+  const forcedPark = getForcedSpecialParkForReel(i);
+
+  frame?.classList.remove("special-hit", "ready-stop", "stopping", "rainbow-hit");
+
+  if (isRainbowPerk(forcedPark)) {
+    frame?.classList.add("rainbow-hit");
+  } else if (isSpecialPerk(forcedPark)) {
+    frame?.classList.add("special-hit");
+  } else {
+    frame?.classList.add("ready-stop");
+  }
+
+  playStopSe();
+}
+
+  await sleep(220);
+
+  playKakuteiAfterSaba();
+  triggerSpecialFlash(true);
+  finalizeResultDisplay(false);
+
+  isShuffling = false;
+  isStopping = false;
+  setStartLeverGlow(false);
+  setStatus("1〜3リール自由確定 / 4リールはパークなし");
+}
+
+function getRandomParks() {
+  const reels123Pool = getAllNormalPerks();
+  const reel4Pool = getFixedExhaustionParks();
+
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  return [
+    pick(reels123Pool),
+    pick(reels123Pool),
+    pick(reels123Pool),
+    pick(reel4Pool)
+  ];
+}
+
+function copyResult() {
+  const input = document.getElementById("resultText");
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    return;
+  }
+
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  input.setSelectionRange(0, 0);
+  input.blur();
+}
+
+function toggleBgm() {
+  bgmEnabled = !bgmEnabled;
+
+  const btn = document.getElementById("bgmBtn");
+  if (btn) btn.textContent = bgmEnabled ? "🎵 BGM ON" : "🎵 BGM OFF";
+
+  if (!bgmEnabled) {
+    bgmSound?.pause();
+  } else {
+    bgmSound?.play().catch(() => {});
+  }
+}
+
+function toggleSe() {
+  seEnabled = !seEnabled;
+
+  const btn = document.getElementById("seBtn");
+  if (btn) btn.textContent = seEnabled ? "🔔 SE ON" : "🔔 SE OFF";
+
+  if (!seEnabled) {
+    [startSound, stopSound, kakuteiSound, atariSound, uraAtariSound, uraHazureSound, gekiatuSound, doreyureSound, hakaiSound].forEach(audio => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    });
+  }
+}
+
+function clearAutoStopTimers() {
+  autoStopTimers.forEach(id => clearTimeout(id));
+  autoStopTimers = [];
+  autoStopSessionId++;
+}
+
+function updateAutoStopButton() {
+  const btn = document.getElementById("autoStopBtn");
+  if (!btn) return;
+  btn.textContent = autoStopEnabled ? "⏱ 自動停止 ON" : "⏱ 自動停止 OFF";
+  btn.style.background = autoStopEnabled
+    ? "rgba(180,40,40,0.75)"
+    : "rgba(0,0,0,0.55)";
+}
+
+function toggleAutoStop() {
+  autoStopEnabled = !autoStopEnabled;
+  updateAutoStopButton();
+  localStorage.setItem("dbd_auto_stop_enabled", autoStopEnabled ? "1" : "0");
+
+  // OFFにした瞬間は、今予約されている自動停止を全部破棄
+  if (!autoStopEnabled) {
+    clearAutoStopTimers();
+  }
+}
+
+function getRandomAutoStopDelayMs() {
+  // 1〜3秒
+  return 300 + Math.floor(Math.random() * 1200);
+}
+
+function scheduleAutoStopSequence() {
+  if (!autoStopEnabled) return;
+  if (!isShuffling) return;
+
+  clearAutoStopTimers();
+
+  const sessionId = autoStopSessionId;
+  let totalDelay = 0; // スタート後まず0秒待つ
+
+  for (let i = 0; i < REEL_IDS.length; i++) {
+    if (isFreeReel(i)) continue;
+
+    totalDelay += getRandomAutoStopDelayMs();
+
+    const timerId = setTimeout(() => {
+      if (sessionId !== autoStopSessionId) return;
+      if (!autoStopEnabled) return;
+      if (!isShuffling) return;
+      if (isUraProcessing || isDoorChanceProcessing || isFrameEventProcessing) return;
+
+      const state = reelStates[REEL_IDS[i]];
+      if (!state || state.phase !== "spinning") return;
+
+      stopReel(i);
+    }, totalDelay);
+
+    autoStopTimers.push(timerId);
+  }
+}
+
+
+function rebuildAllReelsKeepingState() {
+  if (isShuffling || isUraProcessing || isDoorChanceProcessing || isFrameEventProcessing) {
+    return;
+  }
+
+  REEL_IDS.forEach(reelId => buildReel(reelId));
+}
+
+function applyVolumes() {
+  if (bgmSound) bgmSound.volume = bgmVolume;
+
+  const seAudios = [
+    startSound,
+    stopSound,
+    kakuteiSound,
+    atariSound,
+    uraAtariSound,
+    uraHazureSound,
+    gekiatuSound,
+    doreyureSound,
+    hakaiSound
+  ];
+
+  seAudios.forEach(audio => {
+    if (!audio) return;
+    audio.volume = seVolume;
+  });
+}
+
+function setBgmVolume(value) {
+  bgmVolume = Number(value) / 100;
+
+  const text = document.getElementById("bgmVolumeText");
+  if (text) text.textContent = `${value}%`;
+
+  if (bgmSound) bgmSound.volume = bgmVolume;
+
+  localStorage.setItem("dbd_bgm_volume", String(value));
+}
+
+function setSeVolume(value) {
+  seVolume = Number(value) / 100;
+
+  const text = document.getElementById("seVolumeText");
+  if (text) text.textContent = `${value}%`;
+
+  const seAudios = [
+    startSound,
+    stopSound,
+    kakuteiSound,
+    atariSound,
+    uraAtariSound,
+    uraHazureSound,
+    gekiatuSound,
+    doreyureSound,
+    hakaiSound
+  ];
+
+  seAudios.forEach(audio => {
+    if (!audio) return;
+    audio.volume = seVolume;
+  });
+
+  localStorage.setItem("dbd_se_volume", String(value));
+}
+
+
+function playStopAfterSaba() {
+  playStopSe();
+  playKakuteiAfterSaba();
+}
+
+
+function stopAllSounds() {
+  [bgmSound, startSound, stopSound, kakuteiSound, atariSound, uraAtariSound, uraHazureSound, gekiatuSound, doreyureSound, hakaiSound].forEach(audio => {
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  });
+}
+
+function playStartSe() {
+  if (!seEnabled || !startSound) return;
+  startSound.pause();
+  startSound.currentTime = 0;
+  startSound.volume = SE_BASE_VOLUME.start * seVolume;
+  startSound.play().catch(() => {});
+}
+
+function playStopSe() {
+  if (!seEnabled || !stopSound) return;
+  stopSound.pause();
+  stopSound.currentTime = 0;
+  stopSound.volume = SE_BASE_VOLUME.stop * seVolume;
+  stopSound.play().catch(() => {});
+}
+
+function playSabaSe() {
+  if (!seEnabled || !sabaSound) return;
+  sabaSound.pause();
+  sabaSound.currentTime = 0;
+  sabaSound.volume = SE_BASE_VOLUME.saba * seVolume;
+  sabaSound.play().catch(() => {});
+}
+
+
+function playKakuteiAfterSaba() {
+  playKakuteiSe();
+}
+
+function playEventVideo(src) {
+  if (!eventVideoWrap || !eventVideo) return;
+
+  eventVideoWrap.classList.remove("hidden");
+
+  if (eventVideo.getAttribute("src") !== src) {
+    eventVideo.src = src;
+  }
+
+  eventVideo.currentTime = 0;
+  eventVideo.muted = false;
+  eventVideo.volume = 0.2;
+  eventVideo.play().catch(() => {});
+}
+
+function hideEventVideo() {
+  if (!eventVideoWrap || !eventVideo) return;
+
+  eventVideo.pause();
+  eventVideo.currentTime = 0;
+  eventVideoWrap.classList.add("hidden");
+}
+
+function startEventSequence() {
+  eventActive = true;
+  eventState = 1;
+  eventStep = 0;
+
+  // 環境音を止める
+  if (bgmSound) {
+    bgmSound.pause();
+  }
+
+  // イベント音を再生
+  if (eventSound) {
+    eventSound.pause();
+    eventSound.currentTime = 0;
+    eventSound.volume = SE_BASE_VOLUME.event1 * seVolume;
+    eventSound.play().catch(() => {});
+  }
+
+  // Event1動画を表示
+  playEventVideo("assets/Event1.mp4");
+  setEventFrameGlow(1); // 白
+}
+
+function tryEventStart() {
+  // 他の特殊演出と併合しない
+  if (currentSpecialHit) return;
+
+  // 既にイベント中なら何もしない
+  if (eventActive) return;
+
+  // 18%抽選
+  if (Math.random() < 0.18) {
+    startEventSequence();
+  }
+}
+
+
+function setStatus(text) {
+  const el = document.getElementById("shuffleStatus");
+  if (el) el.textContent = text;
+}
+
+function getNoPerkIndexes() {
+  return reelResults
+    .map((park, index) => ({ park, index }))
+    .filter(item =>
+      item.park &&
+      item.park.name === "パークなし" &&
+      item.index !== PUBLIC_MATCH_FIXED_REEL_INDEX
+    )
+    .map(item => item.index);
+}
+
+/**
+ * 救済候補を返す。既出パーク・今回計画済みパークを除外し、重みを保持する。
+ * @param {string[]} currentNames - 現在のリール結果のパーク名
+ * @param {string[]} excludeNames - 今回のplanで使用済みのパーク名
+ * @returns {{ name: string, weight: number }[]}
+ */
+function getRevivalCandidates(currentNames = [], excludeNames = []) {
+  return REVIVAL_CANDIDATES.filter(c =>
+    !currentNames.includes(c.name) && !excludeNames.includes(c.name)
+  );
+}
+
+/**
+ * 候補から重み付き抽選で1パーク名を選ぶ
+ * @param {{ name: string, weight: number }[]} candidates
+ * @returns {string}
+ */
+function weightedPickRevivalCandidate(candidates) {
+  const total = candidates.reduce((sum, c) => sum + c.weight, 0);
+  let r = Math.random() * total;
+  for (const c of candidates) {
+    r -= c.weight;
+    if (r <= 0) return c.name;
+  }
+  return candidates[candidates.length - 1].name;
+}
+
+function pickRevivalPlan(noPerkIndexes) {
+  const usedNames = reelResults.map(p => p?.name).filter(Boolean);
+  const plan = [];
+
+  for (const reelIndex of noPerkIndexes) {
+    const exclude = plan.map(x => x.perkName);
+    const candidates = getRevivalCandidates(usedNames.concat(exclude), exclude);
+
+    if (candidates.length === 0) continue;
+
+    const perkName = weightedPickRevivalCandidate(candidates);
+    plan.push({ reelIndex, perkName });
+  }
+
+  return plan;
+}
+
+function flashAllReels(times, holdAfter = false, callback) {
+  const sessionId = uraSessionId;
+  let count = 0;
+
+  const flashOnMs = 300;    // 光っている時間
+  const flashGapMs = 250;   // 次に光るまでの間隔
+  const endWaitMs = 500;    // 当たり時の最後の待ち
+  const hazureDelayMs = 300; // ハズレ時、3回点灯後に音を出すまでの待ち
+
+  const doFlash = () => {
+    if (sessionId !== uraSessionId) return;
+
+    FRAME_IDS.forEach(id => {
+      const frame = document.getElementById(id);
+      if (!frame) return;
+
+      frame.classList.add("flash");
+
+      setTimeout(() => {
+        if (sessionId !== uraSessionId) return;
+        frame.classList.remove("flash");
+      }, flashOnMs);
+    });
+
+    count++;
+
+    if (count >= times) {
+      // 当たりなら最後に光を保持
+      if (holdAfter) {
+        setTimeout(() => {
+          if (sessionId !== uraSessionId) return;
+
+          FRAME_IDS.forEach(id => {
+            const frame = document.getElementById(id);
+            if (frame) frame.classList.add("flash-hold");
+          });
+
+          setTimeout(() => {
+            if (sessionId !== uraSessionId) return;
+            if (callback) callback();
+          }, endWaitMs);
+        }, flashOnMs);
+
+        return;
+      }
+
+      // ハズレなら3回目点灯のあと0.3秒空けてからコールバック
+      setTimeout(() => {
+        if (sessionId !== uraSessionId) return;
+
+        setTimeout(() => {
+          if (sessionId !== uraSessionId) return;
+          if (callback) callback();
+        }, hazureDelayMs);
+
+      }, flashOnMs);
+
+      return;
+    }
+
+    setTimeout(doFlash, flashOnMs + flashGapMs);
+  };
+
+  doFlash();
+}
+
+function finalizeResultDisplay(playFinalSe = true) {
+  clearAutoStopTimers();
+
+  REEL_IDS.forEach((_, index) => {
+    const park = reelResults[index];
+    if (!park) return;
+    forceReelDisplay(index, park, true);
+  });
+
+  isShuffling = false;
+  isStopping = false;
+  isUraProcessing = false;
+  isDoorChanceProcessing = false;
+  isFrameEventProcessing = false;
+  uraResolved = true;
+  uraTargetIndexes = [];
+
+  cancelAnimationFrame(animationFrameId);
+  animationFrameId = null;
+
+  setStartLeverGlow(false);
+
+  FRAME_IDS.forEach((frameId, index) => {
+    const frame = document.getElementById(frameId);
+    const park = reelResults[index];
+
+    frame?.classList.remove(
+      "stopping",
+      "ready-stop",
+      "flash",
+      "flash-hold",
+      "frame-run",
+      "frame-lit",
+      "frame-hit",
+      "frame-flash-all"
+    );
+
+    if (isRainbowPerk(park)) {
+      frame?.classList.add("rainbow-hit");
+      frame?.classList.remove("special-hit");
+    } else if (isSpecialPerk(park) || REVIVAL_CANDIDATES.some(c => c.name === park?.name)) {
+      frame?.classList.add("special-hit");
+      frame?.classList.remove("rainbow-hit");
+    } else {
+      frame?.classList.remove("special-hit", "rainbow-hit");
+      frame?.classList.add("ready-stop");
+    }
+  });
+
+  showResult();
+
+  if (playFinalSe) {
+    playKakuteiAfterSaba();
+  }
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = false;
+
+  STOP_BTN_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = true;
+  });
+
+  setAllStopButtonGlow(false);
+}
+
+function spinRevivalReel(index, perkName, sessionId) {
+  const reelId = REEL_IDS[index];
+  const state = reelStates[reelId];
+  const frame = document.getElementById(FRAME_IDS[index]);
+
+  const targetPark = allParks.find(p => p.name === perkName);
+  if (!targetPark) return Promise.resolve(false);
+
+  const reelParks = getReelParkList(reelId);
+const targetIndex = reelParks.findIndex(
+  p => p.name === targetPark.name && p.icon === targetPark.icon
+);
+
+  return new Promise(resolve => {
+    if (state._uraAnimId) {
+      cancelAnimationFrame(state._uraAnimId);
+      state._uraAnimId = null;
+    }
+
+    frame?.classList.remove("special-hit", "rainbow-hit", "ready-stop", "flash-hold", "flash");
+    frame?.classList.add("stopping");
+
+    state.phase = "spinning";
+    state.speed = 2600;
+    state.finalPark = null;
+    state.stopRequested = false;
+    state.stopTargetY = null;
+    state.stopFromY = state.y;
+    state.stopStartMs = null;
+    state.stopEndMs = null;
+    state._lastTempSpinTime = 0;
+
+    // 裏抽選用に安全なコピー位置へ再配置
+    recenterReelForUra(reelId);
+
+    const spinStart = performance.now();
+    const fakeSpinDuration = 1200;
+
+    const spinLoop = (now) => {
+      if (!isUraProcessing || sessionId !== uraSessionId) {
+        frame?.classList.remove("stopping");
+        state._uraAnimId = null;
+        resolve(false);
+        return;
+      }
+
+      if (!state._lastTempSpinTime) {
+        state._lastTempSpinTime = now;
+      }
+
+      const dt = Math.min((now - state._lastTempSpinTime) / 1000, 0.05);
+      state._lastTempSpinTime = now;
+
+      state.y += state.speed * dt;
+      applyReelTransform(reelId);
+
+      if (now - spinStart < fakeSpinDuration) {
+        state._uraAnimId = requestAnimationFrame(spinLoop);
+        return;
+      }
+
+      state.phase = "stopping";
+      state.stopFromY = state.y;
+      state.finalPark = targetPark;
+      state.stopTargetY = getUraStopTargetY(targetIndex, reelId);
+      state.stopStartMs = performance.now();
+      state.stopEndMs = state.stopStartMs + 650;
+
+      const settleLoop = (ts) => {
+        if (!isUraProcessing || sessionId !== uraSessionId) {
+          frame?.classList.remove("stopping");
+          state._uraAnimId = null;
+          resolve(false);
+          return;
+        }
+
+        const total = state.stopEndMs - state.stopStartMs;
+        const elapsed = Math.min(ts - state.stopStartMs, total);
+        const t = Math.max(0, Math.min(elapsed / total, 1));
+        const eased = 1 - Math.pow(1 - t, 2.8);
+
+        state.y = state.stopFromY + (state.stopTargetY - state.stopFromY) * eased;
+        applyReelTransform(reelId);
+
+        if (t < 1) {
+          state._uraAnimId = requestAnimationFrame(settleLoop);
+          return;
+        }
+
+        state.y = state.stopTargetY;
+        applyReelTransform(reelId);
+
+        state.phase = "stopped";
+        state.finalPark = targetPark;
+        reelResults[index] = targetPark;
+
+        frame?.classList.remove("stopping");
+        frame?.classList.add("special-hit");
+
+        state._uraAnimId = null;
+        resolve(true);
+      };
+
+      state._uraAnimId = requestAnimationFrame(settleLoop);
+    };
+
+    state._uraAnimId = requestAnimationFrame(spinLoop);
+  });
+}
+
+async function runUraLotteryIfNeeded() {
+  if (uraResolved || isUraProcessing) return;
+
+  // イベント最終抽選まで到達したゲームは
+  // パークなし救済 / フレーム演出 / ドア演出へ進ませない
+  if (skipPostStopBonusThisRound) {
+    finalizeResultDisplay(false);
+    return;
+  }
+
+  const noPerkIndexes = getNoPerkIndexes();
+
+  // パークなしが無ければ裏抽選なしで次へ
+  if (noPerkIndexes.length === 0) {
+    runFrameEventIfNeeded();
+    return;
+  }
+
+  // パークなしがあっても、まず40%で裏抽選に突入するか抽選
+  const shouldEnterUra = Math.random() < URA_ENTRY_RATE;
+  if (!shouldEnterUra) {
+    finalizeResultDisplay();
+    return;
+  }
+
+  uraResolved = true;
+  isUraProcessing = true;
+  const sessionId = ++uraSessionId;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  STOP_BTN_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = true;
+  });
+
+  const isHit = Math.random() < URA_HIT_RATE;
+
+  flashAllReels(3, isHit, async () => {
+    if (sessionId !== uraSessionId) return;
+
+    if (!isHit) {
+      playUraHazure();
+      finalizeResultDisplay();
+      return;
+    }
+
+    playUraAtari();
+
+    noPerkIndexes.forEach(i => {
+      const frame = document.getElementById(FRAME_IDS[i]);
+      frame?.classList.remove("flash-hold", "flash");
+    });
+
+    const revivalPlan = pickRevivalPlan(noPerkIndexes);
+
+    if (!revivalPlan.length) {
+      playUraHazure();
+      finalizeResultDisplay();
+      return;
+    }
+
+    uraTargetIndexes = revivalPlan.map(x => x.reelIndex);
+    uraSpinPendingCount = revivalPlan.length;
+
+    const results = await Promise.all(
+      revivalPlan.map(({ reelIndex, perkName }) =>
+        spinRevivalReel(reelIndex, perkName, sessionId)
+      )
+    );
+
+    if (sessionId !== uraSessionId) return;
+
+    const successCount = results.filter(Boolean).length;
+
+    if (successCount === 0) {
+      playUraHazure();
+    }
+
+    finalizeResultDisplay();
+  });
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function clearFrameEventClasses() {
+  FRAME_IDS.forEach(id => {
+    const frame = document.getElementById(id);
+    if (!frame) return;
+    frame.classList.remove("frame-run", "frame-lit", "frame-hit", "frame-flash-all", "frame-win-hold");
+  });
+}
+
+function holdWinningFramesRed() {
+  FRAME_IDS.forEach(id => {
+    const frame = document.getElementById(id);
+    if (!frame) return;
+
+    frame.classList.remove("frame-run", "frame-lit", "frame-hit", "frame-flash-all");
+    frame.classList.add("frame-win-hold");
+  });
+}
+
+function setFramesLit(indexes = [], mode = "lit") {
+  FRAME_IDS.forEach((id, i) => {
+    const frame = document.getElementById(id);
+    if (!frame) return;
+
+    frame.classList.remove("frame-run", "frame-lit", "frame-hit");
+
+    if (indexes.includes(i)) {
+      frame.classList.add(mode === "hit" ? "frame-hit" : "frame-lit");
+    }
+  });
+}
+
+function addFrameRun(indexes = []) {
+  FRAME_IDS.forEach((id, i) => {
+    const frame = document.getElementById(id);
+    if (!frame) return;
+
+    frame.classList.remove("frame-run");
+    if (indexes.includes(i)) {
+      frame.classList.add("frame-run");
+    }
+  });
+}
+
+async function flashAllFrames(times = 3, interval = 140, hitMode = true, sessionId = 0) {
+  for (let t = 0; t < times; t++) {
+    if (sessionId !== frameEventSessionId) return false;
+
+    FRAME_IDS.forEach(id => {
+      const frame = document.getElementById(id);
+      if (!frame) return;
+      frame.classList.add(hitMode ? "frame-hit" : "frame-lit", "frame-flash-all");
+    });
+
+    await sleep(interval);
+
+    if (sessionId !== frameEventSessionId) return false;
+
+    FRAME_IDS.forEach(id => {
+      const frame = document.getElementById(id);
+      if (!frame) return;
+      frame.classList.remove("frame-flash-all");
+      if (!hitMode) frame.classList.remove("frame-lit");
+    });
+
+    await sleep(interval);
+  }
+
+  return true;
+}
+
+function hasNoPerkInResults() {
+  return reelResults.some(park => park && park.name === "パークなし");
+}
+
+function canRunFrameEvent() {
+  if (currentSpecialHit) return false;           // 今回スタート時に確定演出が発動していない
+  if (isUraProcessing) return false;
+  if (isFrameEventProcessing) return false;
+  if (reelResults.length !== 4) return false;
+  if (reelResults.some(p => !p)) return false;
+  if (hasNoPerkInResults()) return false;        // パークなし が1つでもあれば不発
+  return true;
+}
+
+function pickCurrentStartSpecialHit() {
+ if (eventExclusiveMode) return false;
+  // 前回イベントで次回ブーストが仕込まれているなら、今回だけ優先適用
+  if (pendingNextSpecialRate != null) {
+    const hit = Math.random() < pendingNextSpecialRate;
+    pendingNextSpecialRate = null;
+    pendingNextSpecialSource = null;
+    return hit;
+  }
+
+  return Math.random() < SPECIAL_HIT_RATE;
+}
+
+function setPendingNextSpecialFromEvent(eventType) {
+  if (eventType === "event1") {
+    pendingNextSpecialRate = NEXT_FREE_RATE_EVENT1;
+    pendingNextSpecialSource = "event1";
+  } else if (eventType === "event2") {
+    pendingNextSpecialRate = NEXT_FREE_RATE_EVENT2;
+    pendingNextSpecialSource = "event2";
+  }
+}
+
+async function playFrameEvent1(isHit, sessionId) {
+  clearFrameEventClasses();
+
+  // 左→右 白演出
+  for (let i = 0; i < FRAME_IDS.length; i++) {
+    if (sessionId !== frameEventSessionId) return false;
+
+    setFramesLit([i], "lit");
+    await sleep(200);
+  }
+
+  if (sessionId !== frameEventSessionId) return false;
+  await sleep(250);
+
+  if (!isHit) {
+    clearFrameEventClasses();
+    return true;
+  }
+
+  // 一瞬全白
+  setFramesLit([0,1,2,3], "lit");
+  await sleep(120);
+
+  // 白フラッシュ
+  await flashAllFrames(2, 80, false, sessionId);
+
+  // 赤確定
+  setFramesLit([0,1,2,3], "hit");
+
+  return true;
+}
+
+async function playFrameEvent2(isHit, sessionId) {
+  clearFrameEventClasses();
+
+  const sequence = [
+    [0,2],
+    [1,3],
+    [0,2],
+    [1,3],
+    [0,2],
+    [1,3]
+  ];
+
+  // 白往復
+  for (const indexes of sequence) {
+    if (sessionId !== frameEventSessionId) return false;
+
+    setFramesLit(indexes, "lit");
+    await sleep(180);
+  }
+
+  if (!isHit) {
+    clearFrameEventClasses();
+    return true;
+  }
+
+  // 一瞬全白
+  setFramesLit([0,1,2,3], "lit");
+  await sleep(120);
+
+  // 白フラッシュ
+  await flashAllFrames(2, 80, false, sessionId);
+
+  // 赤確定
+  setFramesLit([0,1,2,3], "hit");
+
+  return true;
+}
+
+async function runFrameEventIfNeeded() {
+  if (skipPostStopBonusThisRound) {
+    finalizeResultDisplay(false);
+    return;
+  }
+
+  if (!canRunFrameEvent()) {
+    finalizeResultDisplay();
+    return;
+  }
+
+  const trigger = Math.random() < FRAME_EVENT_TRIGGER_RATE;
+  if (!trigger) {
+    await runDoorChanceIfNeeded();
+    return;
+  }
+
+  isFrameEventProcessing = true;
+  const sessionId = ++frameEventSessionId;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  STOP_BTN_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = true;
+  });
+
+  let isHit = false;
+
+  try {
+    const isEvent1 = Math.random() < FRAME_EVENT1_RATE;
+    const eventType = isEvent1 ? "event1" : "event2";
+    isHit = Math.random() < (isEvent1 ? FRAME_EVENT1_HIT_RATE : FRAME_EVENT2_HIT_RATE);
+
+    if (isEvent1) {
+      await playFrameEvent1(isHit, sessionId);
+    } else {
+      await playFrameEvent2(isHit, sessionId);
+    }
+
+    if (sessionId !== frameEventSessionId) return;
+
+    if (isHit) {
+      setPendingNextSpecialFromEvent(eventType);
+      playGekiatuSound();
+      playUraAtari();
+      holdWinningFramesRed();
+    } else {
+      playUraHazure();
+      clearFrameEventClasses();
+    }
+
+    await sleep(250);
+
+  } catch (e) {
+    console.error("runFrameEventIfNeeded error:", e);
+  } finally {
+    isFrameEventProcessing = false;
+
+    if (!isShuffling || reelResults.length === 4) {
+      if (skipPostStopBonusThisRound) {
+        finalizeResultDisplay(false);
+      } else {
+        finalizeResultDisplay();
+      }
+    }
+
+    if (isHit && !skipPostStopBonusThisRound) {
+      holdWinningFramesRed();
+    }
+  }
+}
+
+function breakItaClip() {
+  if (!slotIta) return;
+  slotIta.style.display = "none";
+}
+
+function playParkChanceWithClipBreak() {
+  const video = document.getElementById("parkChanceVideo");
+  breakItaClip();
+
+  setTimeout(() => {
+    if (!video) return;
+    video.style.display = "block";
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  }, 120);
+}
+
+function flashScreenQuick() {
+  const flash = document.getElementById("screenFlash");
+  if (!flash) return;
+
+  flash.classList.add("show");
+  setTimeout(() => flash.classList.remove("show"), 90);
+}
+
+
+function hideParkChanceVideo() {
+  const video = document.getElementById("parkChanceVideo");
+  if (!video) return;
+
+  video.pause();
+  video.currentTime = 0;
+  video.style.display = "none";
+}
+
+function setExhaustionFrameTight(enabled) {
+  // 今回は tight 演出を使わない
+}
+
+function isExhaustionReelIndex(index) {
+  return index === PUBLIC_MATCH_FIXED_REEL_INDEX;
+}
+
+
+function showResult() {
+  const names = reelResults.map(p => p?.name || "").filter(Boolean);
+  const text = names.join(" / ");
+
+  const input = document.getElementById("resultText");
+  if (input) input.value = text;
+}
+
+const BASE_WIDTH = 1600;
+const BASE_HEIGHT = 900;
+
+function fitGameToWindow() {
+  const stage = document.getElementById("app-stage");
+  const root = document.getElementById("game-root");
+  if (!stage || !root) return;
+
+  const stageWidth = stage.clientWidth;
+  const stageHeight = stage.clientHeight;
+
+  const scaleX = stageWidth / BASE_WIDTH;
+  const scaleY = stageHeight / BASE_HEIGHT;
+  const scale = Math.min(scaleX, scaleY);
+
+  root.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  fitGameToWindow();
+
+  buildReel("reel1");
+  buildReel("reel2");
+  buildReel("reel3");
+  buildReel("reel4");
+
+  sessionStorage.removeItem("dbd_page_switching");
+  stopAllSounds();
+
+  const savedBgmVolume = localStorage.getItem("dbd_bgm_volume");
+  const savedSeVolume = localStorage.getItem("dbd_se_volume");
+  const savedAutoStop = localStorage.getItem("dbd_auto_stop_enabled");
+
+  const bgmSlider = document.getElementById("bgmVolume");
+  const seSlider = document.getElementById("seVolume");
+  const survivorLoopVideo = document.getElementById("survivorLoopVideo");
+
+  // 追加
+  const mainLoopWrap = document.getElementById("mainLoopWrap");
+  const mainLoopVideo = document.getElementById("mainLoopVideo");
+
+  if (savedBgmVolume !== null) {
+    const v = Number(savedBgmVolume);
+    bgmVolume = v / 100;
+    if (bgmSlider) bgmSlider.value = v;
+    const text = document.getElementById("bgmVolumeText");
+    if (text) text.textContent = `${v}%`;
+  }
+
+  if (savedSeVolume !== null) {
+    const v = Number(savedSeVolume);
+    seVolume = v / 100;
+    if (seSlider) seSlider.value = v;
+    const text = document.getElementById("seVolumeText");
+    if (text) text.textContent = `${v}%`;
+  }
+
+  applyVolumes();
+
+  autoStopEnabled = savedAutoStop === "1";
+  updateAutoStopButton();
+
+  setStatus("待機中");
+
+  if (survivorLoopVideo) {
+    survivorLoopVideo.muted = true;
+    survivorLoopVideo.loop = true;
+    survivorLoopVideo.playsInline = true;
+    survivorLoopVideo.play().catch(() => {});
+  }
+
+  // 追加
+  if (mainLoopVideo) {
+    mainLoopVideo.muted = true;
+    mainLoopVideo.loop = true;
+    mainLoopVideo.playsInline = true;
+    mainLoopVideo.play().catch(() => {});
+  }
+
+  if (mainLoopWrap) {
+  mainLoopWrap.addEventListener("mouseenter", () => {
+    mainLoopWrap.classList.add("hide-video");
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    const rect = mainLoopWrap.getBoundingClientRect();
+
+    const isInside =
+      e.clientX >= rect.left &&
+      e.clientX <= rect.right &&
+      e.clientY >= rect.top &&
+      e.clientY <= rect.bottom;
+
+    if (!isInside) {
+      mainLoopWrap.classList.remove("hide-video");
+    }
+  });
+}
+
+  const playAudio = () => {
+    if (bgmEnabled) {
+      bgmSound?.play().catch(() => {});
+    }
+
+    if (survivorLoopVideo) {
+      survivorLoopVideo.play().catch(() => {});
+    }
+
+    // 追加
+    if (mainLoopVideo) {
+      mainLoopVideo.play().catch(() => {});
+    }
+
+    document.removeEventListener("click", playAudio);
+  };
+
+  document.addEventListener("click", playAudio);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  const modal = document.getElementById("perkFilterModal");
+  if (!modal) return;
+
+  if (!modal.classList.contains("hidden")) {
+    modal.classList.add("hidden");
+  }
+});
+
+
+window.addEventListener("resize", fitGameToWindow);
+
+/* ================================================
+   キーボード操作（ローカル）
+   ・Ctrl+0  : スタート
+   ・1/2/3/4 または Numpad1〜4 : 各リール停止
+   ・チャット連動処理は除外済み。ローカルキー入力のみ。
+   ================================================ */
+
+/**
+ * キーボードによるスタート・リール停止操作
+ * 入力欄フォーカス中・isShuffling外・各種ガード条件でスキップ
+ */
+function handleStreamControlKey(e) {
+  // 入力欄フォーカス中は無効
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+  // Ctrl+0 でスタート
+  if (e.ctrlKey && e.key === "0") {
+    e.preventDefault();
+    if (!isShuffling) startShuffle();
+    return;
+  }
+
+  // 数字キー（通常 + Numpad）→ リール停止
+  const KEY_TO_REEL = {
+    "1": 0, "2": 1, "3": 2, "4": 3,
+    "Numpad1": 0, "Numpad2": 1, "Numpad3": 2, "Numpad4": 3,
+  };
+
+  const reelIndex = KEY_TO_REEL[e.code] ?? KEY_TO_REEL[e.key];
+  if (reelIndex === undefined) return;
+
+  // スロット動作中でないなら無視
+  if (!isShuffling) return;
+  if (isStopping) return;
+  if (eventExclusiveMode) return;
+
+  // クールダウンチェック
+  const now = Date.now();
+  if (now < reelCommandCooldownUntil[reelIndex]) return;
+
+  // 1スピン中の二重受付防止
+  if (reelCommandAccepted[reelIndex]) return;
+
+  reelCommandAccepted[reelIndex]      = true;
+  reelCommandCooldownUntil[reelIndex] = now + REEL_COMMAND_COOLDOWN_MS;
+
+  stopReel(reelIndex);
+}
+
+document.addEventListener("keydown", handleStreamControlKey);
+
+/* ================================================
+   グリッチハズレ演出
+   ================================================ */
+
+/** finishReelStop() の allStopped ブロックから呼ぶ（全4停止後・他演出なし時） */
+async function startGlitchHazureSequence() {
+  isShuffling = false;
+  isStopping  = false;
+
+  const startLever = document.querySelector(".slot-start-lever");
+  if (startLever) startLever.disabled = true;
+
+  STOP_BTN_IDS.forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = true;
+  });
+  setAllStopButtonGlow(false);
+
+  // 1. BGM・SE を止める
+  bgmSound?.pause();
+  eventSound.pause();
+  eventSound.currentTime = 0;
+
+  // 2. 無音
+  // ③ 50%の確率で100〜150msのランダムジッター（心音の入りに違和感）
+  const heartBeatJitter = Math.random() < 0.5
+    ? 100 + Math.floor(Math.random() * 51)
+    : 0;
+  await sleep(GLITCH_HAZURE_SILENCE_MS + heartBeatJitter);
+
+  // 3. 心音スタート
+  glitchHeartSound.volume      = SE_BASE_VOLUME_GLITCH.heartbeat * seVolume;
+  glitchHeartSound.currentTime = 0;
+  glitchHeartSound.play().catch(() => {});
+
+  // 4. ノイズを重ねる
+  await sleep(GLITCH_HAZURE_NOISE_DELAY_MS);
+  glitchNoiseSound.volume      = SE_BASE_VOLUME_GLITCH.noise * seVolume;
+  glitchNoiseSound.currentTime = 0;
+  glitchNoiseSound.play().catch(() => {});
+
+  // 5. グリッチCSS（累積: 心音から400ms）
+  await sleep(GLITCH_HAZURE_GLITCH_DELAY_MS - GLITCH_HAZURE_NOISE_DELAY_MS);
+  _triggerGlitchCSS();
+
+  // 6. エラーテキスト表示（累積: 心音から500ms）
+  await sleep(GLITCH_HAZURE_ERROR_DELAY_MS - GLITCH_HAZURE_GLITCH_DELAY_MS);
+  _showGlitchErrorText();
+
+  // 7. リール回転→パークなしへ着地（累積: 心音から1100ms）
+  await sleep(GLITCH_HAZURE_REEL_START_MS - GLITCH_HAZURE_ERROR_DELAY_MS);
+  const noPark = getNoPerkObject();
+
+  if (noPark) {
+    playStartSe(); // 再シャッフル開始音
+    const promises = [];
+    for (let i = 0; i < REEL_IDS.length; i++) {
+      // ④ 3番目のリール(i===2)だけ起動を300〜400ms遅らせる
+      if (i === 2) {
+        await sleep(300 + Math.floor(Math.random() * 101));
+      }
+      promises.push(spinGlitchReel(i, noPark));
+      if (i < REEL_IDS.length - 1) {
+        await sleep(GLITCH_HAZURE_REEL_INTERVAL_MS);
+      }
+    }
+    await Promise.all(promises);
+  }
+
+  // 8. パークなし揃い後に絶望 or 復活へ分岐
+  await resolveGlitchBranch();
+}
+
+function endGlitchHazureSequence() {
+  _stopGlitchSounds();
+  _clearGlitchCSS();
+
+  isGlitchHazureActive = false;
+
+  // BGM 再開
+  if (bgmEnabled) {
+    bgmSound.currentTime = 0;
+    bgmSound.play().catch(() => {});
+  }
+
+  finalizeResultDisplay(false); // SE なしで結果確定
+}
+
+/* ===== グリッチ分岐ルート ===== */
+
+/** パークなし揃い後の絶望/復活抽選 */
+async function resolveGlitchBranch() {
+  if (Math.random() < GLITCH_REVIVE_RATE) {
+    await runGlitchReviveRoute();
+  } else {
+    await runGlitchDespairRoute();
+  }
+}
+
+/** 絶望ルート：zetubou再生→終了（ハズレ処理） */
+async function runGlitchDespairRoute() {
+  await sleep(400);
+  if (seEnabled) {
+    glitchZetubouSound.pause();
+    glitchZetubouSound.currentTime = 0;
+    glitchZetubouSound.volume = SE_BASE_VOLUME.uraHazure * seVolume;
+    glitchZetubouSound.play().catch(() => {});
+  }
+  await sleep(GLITCH_HAZURE_HOLD_MS);
+  await sleep(120);
+  endGlitchHazureSequence();
+}
+
+/** 復活ルート：ドンSE→再スピン→パーク自由確定 */
+async function runGlitchReviveRoute() {
+  // 1. 不穏な溜め
+  await sleep(GLITCH_REVIVE_PAUSE_MS);
+
+  // 2. Don_SE 再生
+  if (seEnabled) {
+    glitchDonSound.pause();
+    glitchDonSound.currentTime = 0;
+    glitchDonSound.volume = SE_BASE_VOLUME_GLITCH.don * seVolume;
+    glitchDonSound.play().catch(() => {});
+  }
+
+  // 3. グリッチ再点火 + SYSTEM RESTORE テキスト + フラッシュ
+  _triggerGlitchCSS();
+  triggerSpecialFlash(false);
+  _showGlitchReviveText();
+
+  // 4. ドンSE後の間
+  await sleep(GLITCH_REVIVE_DON_DELAY_MS);
+
+  // 5. 心音・ノイズを停止（復活なので不穏音はクリア）
+  _stopGlitchSounds();
+
+  // 6. 全リールをパーク自由で再スピン（3番目の追加遅延なし・テンポよく）
+  playStartSe();
+  const promises = [];
+  for (let i = 0; i < REEL_IDS.length; i++) {
+    promises.push(spinGlitchReel(i, FREE_PARK));
+    if (i < REEL_IDS.length - 1) {
+      await sleep(GLITCH_HAZURE_REEL_INTERVAL_MS);
+    }
+  }
+  await Promise.all(promises);
+
+  // 7. 復活完了・通常復帰
+  isGlitchHazureActive = false;
+  _clearGlitchCSS();
+
+  if (bgmEnabled) {
+    bgmSound.currentTime = 0;
+    bgmSound.play().catch(() => {});
+  }
+
+  finalizeResultDisplay(true); // 当たりSE付きで確定
+}
+
+/** SYSTEM RESTORE テキストを表示し、終了後に SIGNAL LOST へ戻す */
+function _showGlitchReviveText() {
+  const el = document.getElementById("glitchErrorText");
+  if (!el) return;
+  el.textContent = "SYSTEM RESTORE";
+  el.classList.add("glitch-revive-visible");
+  setTimeout(() => {
+    el.classList.remove("glitch-revive-visible");
+    el.textContent = "SIGNAL LOST";
+  }, GLITCH_HAZURE_ERROR_DURATION_MS);
+}
+
+/** startShuffle() の先頭リセットで呼ぶ */
+function resetGlitchHazure() {
+  isGlitchHazureActive = false;
+  _stopGlitchSounds();
+  _clearGlitchCSS();
+  _cancelGlitchReelAnims();
+}
+
+// ---- グリッチ内部ヘルパー ----
+
+function _triggerGlitchCSS() {
+  const overlay  = document.getElementById("glitchOverlay");
+  const gameRoot = document.getElementById("game-root");
+  overlay?.classList.add("glitch-active");
+  gameRoot?.classList.add("glitch-screen");
+  setTimeout(() => {
+    overlay?.classList.remove("glitch-active");
+    gameRoot?.classList.remove("glitch-screen");
+  }, GLITCH_HAZURE_GLITCH_DURATION_MS);
+
+  // グリッチ発火と同時に noise.mp3 を一発再生
+  if (seEnabled) {
+    glitchNoiseShotSound.pause();
+    glitchNoiseShotSound.currentTime = 0;
+    glitchNoiseShotSound.volume = SE_BASE_VOLUME_GLITCH.noise * seVolume;
+    glitchNoiseShotSound.play().catch(() => {});
+  }
+}
+
+function _showGlitchErrorText() {
+  const el = document.getElementById("glitchErrorText");
+  if (!el) return;
+  el.classList.add("glitch-error-visible");
+  setTimeout(() => {
+    el.classList.remove("glitch-error-visible");
+  }, GLITCH_HAZURE_ERROR_DURATION_MS);
+}
+
+function _stopGlitchSounds() {
+  glitchHeartSound.pause();
+  glitchHeartSound.currentTime = 0;
+  glitchNoiseSound.pause();
+  glitchNoiseSound.currentTime = 0;
+}
+
+function _clearGlitchCSS() {
+  document.getElementById("glitchOverlay")?.classList.remove("glitch-active");
+  document.getElementById("glitchErrorText")?.classList.remove("glitch-error-visible");
+  document.getElementById("game-root")?.classList.remove("glitch-screen");
+}
+
+function _cancelGlitchReelAnims() {
+  REEL_IDS.forEach(reelId => {
+    const state = reelStates[reelId];
+    if (state?._glitchAnimId) {
+      cancelAnimationFrame(state._glitchAnimId);
+      state._glitchAnimId = null;
+    }
+  });
+}
+
+/**
+ * 1本のリールを回転させてtargetParkに停止させる。
+ * spinRevivalReel と同構造だが isGlitchHazureActive でガードする。
+ */
+function spinGlitchReel(index, targetPark) {
+  const reelId = REEL_IDS[index];
+  const state  = reelStates[reelId];
+  const frame  = document.getElementById(FRAME_IDS[index]);
+
+  return new Promise(resolve => {
+    // 既存アニメがあればキャンセル
+    if (state._glitchAnimId) {
+      cancelAnimationFrame(state._glitchAnimId);
+      state._glitchAnimId = null;
+    }
+
+    const reelParks  = getReelParkList(reelId);
+    const targetIndex = reelParks.findIndex(
+      p => p.name === targetPark.name && p.icon === targetPark.icon
+    );
+
+    frame?.classList.remove("special-hit", "rainbow-hit", "ready-stop", "flash-hold", "flash");
+    frame?.classList.add("stopping");
+
+    state.phase          = "spinning";
+    state.speed          = 2400;
+    state.finalPark      = null;
+    state.stopRequested  = false;
+    state.stopTargetY    = null;
+    state.stopFromY      = state.y;
+    state.stopStartMs    = null;
+    state.stopEndMs      = null;
+    state._lastGlitchSpinTime = 0;
+
+    // 安全なコピー位置へ再配置（spinRevivalReel と同じ手法）
+    recenterReelForUra(reelId);
+
+    const spinStart   = performance.now();
+    const spinDuration = 280; // グリッチ用: 短めのスピン
+
+    const spinLoop = (now) => {
+      if (!isGlitchHazureActive) {
+        frame?.classList.remove("stopping");
+        state._glitchAnimId = null;
+        resolve(false);
+        return;
+      }
+
+      if (!state._lastGlitchSpinTime) state._lastGlitchSpinTime = now;
+      const dt = Math.min((now - state._lastGlitchSpinTime) / 1000, 0.05);
+      state._lastGlitchSpinTime = now;
+
+      state.y += state.speed * dt;
+      applyReelTransform(reelId);
+
+      if (now - spinStart < spinDuration) {
+        state._glitchAnimId = requestAnimationFrame(spinLoop);
+        return;
+      }
+
+      // リールにパークなしが見つからない場合は即時表示にフォールバック
+      if (targetIndex < 0) {
+        state.phase      = "stopped";
+        state.finalPark  = targetPark;
+        reelResults[index] = targetPark;
+        forceReelDisplay(index, targetPark, true);
+        frame?.classList.remove("stopping");
+        playStopSe();
+        state._glitchAnimId = null;
+        resolve(true);
+        return;
+      }
+
+      // 停止アニメーション開始
+      state.phase       = "stopping";
+      state.stopFromY   = state.y;
+      state.finalPark   = targetPark;
+      state.stopTargetY = getUraStopTargetY(targetIndex, reelId);
+      state.stopStartMs = performance.now();
+      state.stopEndMs   = state.stopStartMs + 300;
+
+      const settleLoop = (ts) => {
+        if (!isGlitchHazureActive) {
+          frame?.classList.remove("stopping");
+          state._glitchAnimId = null;
+          resolve(false);
+          return;
+        }
+
+        const total   = state.stopEndMs - state.stopStartMs;
+        const elapsed = Math.min(ts - state.stopStartMs, total);
+        const t       = Math.max(0, Math.min(elapsed / total, 1));
+        const eased   = 1 - Math.pow(1 - t, 2.8);
+
+        state.y = state.stopFromY + (state.stopTargetY - state.stopFromY) * eased;
+        applyReelTransform(reelId);
+
+        if (t < 1) {
+          state._glitchAnimId = requestAnimationFrame(settleLoop);
+          return;
+        }
+
+        state.y = state.stopTargetY;
+        applyReelTransform(reelId);
+
+        state.phase        = "stopped";
+        state.finalPark    = targetPark;
+        reelResults[index] = targetPark;
+
+        frame?.classList.remove("stopping");
+        frame?.classList.add("ready-stop"); // パークなしは通常フレーム色
+
+        playStopSe();
+        state._glitchAnimId = null;
+        resolve(true);
+      };
+
+      state._glitchAnimId = requestAnimationFrame(settleLoop);
+    };
+
+    state._glitchAnimId = requestAnimationFrame(spinLoop);
+  });
+}
+
+</script>
+
+<div id="perkTooltip" class="perk-tooltip hidden">
+  <div id="perkTooltipTitle" class="perk-tooltip-title"></div>
+  <div id="perkTooltipDesc" class="perk-tooltip-desc"></div>
+</div>
+
+</body>
+</html>
